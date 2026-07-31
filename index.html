@@ -28,24 +28,25 @@
   </body>
 
   <script>
-    const GOOGLE_WEB_APP_URL = `https://script.google.com/macros/s/AKfycbzl-y7G_tbpk7lJMufvP-dyRqcFUEr4Jvd6PsUzAozhbuKK6GCHN5Ph8A1yiF-YNeSUrA/exec`;
-
-    function init() {
+    function runApp() {
+      // 1. ตรวจสอบว่าหน้าหลักนี้ ได้รับ Parameter สแกนกลับมาจากหน้ากล้องหรือไม่
       const urlParams = new URLSearchParams(window.location.search);
       const action = urlParams.get("action");
       const field = urlParams.get("field");
       const value = urlParams.get("value");
 
-      let finalUrl = GOOGLE_WEB_APP_URL;
+      // 2. URL ของ Google Web App ของคุณ
+      let url = `hhttps://script.google.com/macros/s/AKfycbw8zOTl74BIo88p48pj0xyxRwDtz54yIGc2qsS0ReZKZ3Sm-ZeBVbDgpkLd2qvUjXs88A/exec`;
 
-      // ถ้าเป็นการเด้งกลับมาจากหน้าสแกนกล้อง ให้แนบค่าสแกนส่งทะลุเข้าไปใน iframe ด้วย
+      // 3. ถ้าส่งค่ากลับมาจากหน้าสแกน ให้ต่อท้าย Parameter เข้าไปใน iframe ด้วย
       if (action === "autofill" && value) {
-        finalUrl += `?action=autofill&field=${field}&value=${encodeURIComponent(value)}`;
+        url += `?action=autofill&field=${field}&value=${encodeURIComponent(value)}`;
       }
 
-      document.getElementById("formframe").src = finalUrl;
+      // 4. โหลดหน้าฟอร์มเข้า iframe
+      document.getElementById("formframe").src = url;
 
-      // เคลียร์ URL หน้าบนสุดให้สะอาดเพื่อความสวยงาม
+      // 5. เคลียร์ URL บนหน้าเว็บหลักให้สะอาด (User รีเฟรชแล้วค่าเดิมจะไม่กรอกซ้ำ)
       if (action === "autofill") {
         window.history.replaceState(
           {},
@@ -54,6 +55,6 @@
         );
       }
     }
-    init();
+    runApp();
   </script>
 </html>
