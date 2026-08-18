@@ -1,60 +1,778 @@
 <!doctype html>
+
 <html lang="th">
-  <head>
+
+<head>
+    <base target="_top" />
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AUT CMMS</title>
+    <title>AUT CMMS Service</title>
+    <!-- =====================================================
+       CRITICAL CSS
+       ส่วนนี้ต้องอยู่ใน HEAD เพื่อให้ Loading แสดงทันที
+       โดยไม่ต้องรอ Tailwind
+  ====================================================== -->
     <style>
-      html,
-      body,
-      iframe {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-      }
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+            background: #f8fafc;
+            font-family: Arial, "Noto Sans Thai", sans-serif;
+        }
+
+        /* ---------------------------------------------
+       Loading Overlay
+    --------------------------------------------- */
+
+        #loadingOverlay {
+            position: fixed;
+
+            inset: 0;
+
+            width: 100%;
+            height: 100%;
+
+            background: linear-gradient(135deg,
+                    #f8fbff 0%,
+                    #ffffff 50%,
+                    #f5f7ff 100%);
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 999999;
+            opacity: 1;
+            visibility: visible;
+            transition:
+                opacity 0.25s ease,
+                visibility 0.25s ease;
+        }
+
+        #loadingOverlay.loading-hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* ---------------------------------------------
+       Loading Icon
+    --------------------------------------------- */
+
+        .loading-icon-wrapper {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-spinner {
+            width: 58px;
+            height: 58px;
+            border: 4px solid #dbeafe;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: loadingSpin 0.8s linear infinite;
+        }
+
+        .loading-tool-icon {
+            position: absolute;
+            color: #2563eb;
+            font-size: 18px;
+        }
+
+        @keyframes loadingSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ---------------------------------------------
+       Loading Text
+    --------------------------------------------- */
+
+        #loadingText {
+            margin-top: 18px;
+            color: #334155;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        #loadingSubText {
+            margin-top: 6px;
+            color: #94a3b8;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        /* ---------------------------------------------
+       Loading Progress
+    --------------------------------------------- */
+
+        .loading-progress {
+            width: 180px;
+            height: 3px;
+            margin-top: 18px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .loading-progress-bar {
+            width: 35%;
+            height: 100%;
+            background: #2563eb;
+            border-radius: 999px;
+            animation: loadingProgress 1.4s ease-in-out infinite;
+        }
+
+        @keyframes loadingProgress {
+            0% {
+                transform: translateX(-120%);
+            }
+
+            50% {
+                transform: translateX(180%);
+            }
+
+            100% {
+                transform: translateX(400%);
+            }
+        }
+
+        /* ---------------------------------------------
+       Initial hidden sections
+    --------------------------------------------- */
+
+        #login-section,
+        #app-section {
+            display: none;
+        }
+
+        /* ---------------------------------------------
+       Iframe
+    --------------------------------------------- */
+
+        iframe {
+            display: block;
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+
+        /* ---------------------------------------------
+       Error Loading
+    --------------------------------------------- */
+
+        #loadingError {
+            display: none;
+            max-width: 320px;
+            margin-top: 18px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+            font-size: 12px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        #loadingRetry {
+            display: none;
+            margin-top: 12px;
+            padding: 8px 18px;
+            border: none;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
     </style>
-  </head>
 
-  <body>
-    <iframe
-      id="formframe"
-      src=""
-      frameborder="0"
-      allow="camera *; microphone *"
-    ></iframe>
-  </body>
+    <!-- =====================================================
+       FontAwesome
+  ====================================================== -->
 
-  <script>
-    function runApp() {
-      // 1. ตรวจสอบว่าหน้าหลักนี้ ได้รับ Parameter สแกนกลับมาจากหน้ากล้องหรือไม่
-      const urlParams = new URLSearchParams(window.location.search);
-      const action = urlParams.get("action");
-      const field = urlParams.get("field");
-      const value = urlParams.get("value");
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+</head>
 
-      // 2. URL ของ Google Web App ของคุณ
-      let url = `https://script.google.com/macros/s/AKfycbwP7ydUt3KnkgVHDVnUYTAi3jnKoE2BNwmNPJBK1QmvGUdMN_IgD4mnt5EL9n4PJO2_/exec`;
+<body class="bg-gray-50">
+    <!-- =========================================================
+     1. FULL SCREEN LOADING
 
-      // 3. ถ้าส่งค่ากลับมาจากหน้าสแกน ให้ต่อท้าย Parameter เข้าไปใน iframe ด้วย
-      if (action === "autofill" && value) {
-        url += `?action=autofill&field=${field}&value=${encodeURIComponent(value)}`;
-      }
+     สำคัญ:
+     Loading อยู่เป็น element แรก ๆ ของ BODY
+     และใช้ CSS inline จึงไม่ต้องรอ Tailwind
+========================================================= -->
 
-      // 4. โหลดหน้าฟอร์มเข้า iframe
-      document.getElementById("formframe").src = url;
+    <div id="loadingOverlay">
+        <div class="loading-icon-wrapper">
+            <div class="loading-spinner"></div>
+            <i class="fa-solid fa-wrench loading-tool-icon"></i>
+        </div>
+        <div id="loadingText">กำลังเริ่มต้นระบบ...</div>
+        <div id="loadingSubText">กรุณารอสักครู่</div>
+        <div class="loading-progress">
+            <div class="loading-progress-bar"></div>
+        </div>
+        <div id="loadingError"></div>
+        <button id="loadingRetry" onclick="location.reload()">
+            <i class="fa-solid fa-rotate-right mr-1"></i>
+        </button>
+    </div>
 
-      // 5. เคลียร์ URL บนหน้าเว็บหลักให้สะอาด (User รีเฟรชแล้วค่าเดิมจะไม่กรอกซ้ำ)
-      if (action === "autofill") {
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname,
-        );
-      }
-    }
-    runApp();
-  </script>
+    <!-- =========================================================
+     2. LOGIN SECTION
+
+     แสดงเฉพาะ Browser ปกติ
+========================================================= -->
+
+    <div id="login-section"
+        class="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        <div class="w-full max-w-sm space-y-6">
+            <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+                <!-- Logo -->
+                <div class="text-center mb-8">
+                    <div
+                        class="w-16 h-16 rounded-2xl bg-blue-600 text-white flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+                        <i class="fa-solid fa-gear text-2xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">
+                        AUT CMMS
+                    </h1>
+                    <p id="subTitlePage" class="text-xs text-gray-400 mt-1 font-medium">
+                        Smart Service Management
+                    </p>
+                </div>
+                <!-- Login Form -->
+                <div class="space-y-4">
+                    <!-- Username -->
+                    <div>
+                        <label for="username"
+                            class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 pl-1">
+                            Username
+                        </label>
+                        <input id="username" type="text" required
+                            class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-4 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                            placeholder="ชื่อผู้ใช้งาน" onkeydown="if (event.key === 'Enter') loginUser();" />
+                    </div>
+                    <!-- Password -->
+                    <div>
+                        <label for="password"
+                            class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 pl-1">
+                            Password
+                        </label>
+
+                        <input id="password" type="password" required
+                            class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-4 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                            placeholder="รหัสผ่าน" onkeydown="if (event.key === 'Enter') loginUser();" />
+                    </div>
+                </div>
+                <!-- Error -->
+                <div id="error-msg"
+                    class="mt-4 bg-red-50 border border-red-200 text-red-600 text-xs text-center py-2.5 rounded-xl hidden font-medium">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i>
+                    <span id="error-text"> ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง </span>
+                </div>
+                <!-- Login Button -->
+                <button onclick="loginUser()" id="btn-login"
+                    class="mt-6 w-full py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket text-xs"></i>
+
+                    <span id="btn-text"> เข้าสู่ระบบ </span>
+                </button>
+            </div>
+            <p class="text-center text-[10px] text-gray-400 font-medium">
+                AUT CMMS v6.0 &copy; 2026
+            </p>
+        </div>
+    </div>
+    <!-- =========================================================
+     3. APP / IFRAME
+========================================================= -->
+    <div id="app-section">
+        <iframe id="formframe" src="" frameborder="0"> </iframe>
+    </div>
+    <!-- =========================================================
+     TAILWIND     
+     โหลดหลังจาก HTML หลักเริ่มแสดงแล้ว
+========================================================= -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- =========================================================
+     LINE LIFF SDK
+========================================================= -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script>
+        /* =========================================================
+     CONFIG
+  ========================================================= */
+
+        const LIFF_ID = "2011076529-EKhCiseU";
+        const GAS_WEBAPP_URL =
+            "https://script.google.com/macros/s/AKfycbxShoa0Qca_bKLSvwTd7Gs0r_bHbjh0DhvTyx52PjHUvbGmUtIx2PdBa4l0XsTY57-qJA/exec";
+
+        /* =========================================================
+     START
+  ========================================================= */
+        window.addEventListener("load", function () {
+            /*
+             * รอให้ Browser โหลด Resource สำคัญ
+             * แล้วค่อยเริ่มตรวจสอบ Session / LIFF
+             */
+            checkSessionAndAuth();
+        });
+        /* =========================================================
+     CHECK SESSION + AUTH
+  ========================================================= */
+        async function checkSessionAndAuth() {
+            try {
+                /*
+                 * -------------------------------------------------------
+                 * 1. ตรวจสอบ Session ก่อน
+                 * -------------------------------------------------------
+                 */
+                const savedSession = localStorage.getItem("userSession");
+                if (savedSession) {
+                    showLoading("กำลังเข้าสู่ระบบ...");
+                    let userData;
+                    try {
+                        userData = JSON.parse(savedSession);
+                    } catch (error) {
+                        console.warn("Session ไม่ถูกต้อง", error);
+                        localStorage.removeItem("userSession");
+                        userData = null;
+                    }
+                    if (userData) {
+                        renderApp(userData);
+                        return;
+                    }
+                }
+
+                /*
+                 * -------------------------------------------------------
+                 * 2. เริ่มต้น LIFF
+                 * -------------------------------------------------------
+                 */
+
+                showLoading("กำลังเชื่อมต่อระบบ LINE...");
+                /*
+                 * ตรวจสอบว่า LIFF SDK โหลดจริงหรือยัง
+                 */
+                if (typeof liff === "undefined") {
+                    throw new Error("ไม่สามารถโหลด LINE LIFF SDK ได้");
+                }
+                await liff.init({
+                    liffId: LIFF_ID,
+                });
+                /*
+                 * -------------------------------------------------------
+                 * 3. Login แล้ว
+                 * -------------------------------------------------------
+                 */
+                if (liff.isLoggedIn()) {
+                    showLoading("กำลังตรวจสอบสิทธิ์การใช้งาน...");
+                    const idToken = liff.getIDToken();
+                    if (!idToken) {
+                        console.warn("ไม่พบ LIFF ID Token");
+                        showLoginForm();
+                        return;
+                    }
+                    /*
+                     * -----------------------------------------------------
+                     * 4. Verify Token กับ GAS
+                     *
+                     * Loading จะยังไม่หาย
+                     * จนกว่า fetch + response.json()
+                     * จะเสร็จ
+                     * -----------------------------------------------------
+                     */
+
+                    const response = await fetch(GAS_WEBAPP_URL, {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "text/plain;charset=utf-8",
+                        },
+
+                        body: JSON.stringify({
+                            action: "verifyLiffToken",
+
+                            idToken: idToken,
+                        }),
+                    });
+
+                    /*
+                     * ตรวจ HTTP Status
+                     */
+
+                    if (!response.ok) {
+                        throw new Error("Server ตอบกลับ HTTP " + response.status);
+                    }
+
+                    /*
+                     * รอ JSON จริง ๆ
+                     */
+
+                    const res = await response.json();
+
+                    console.log("LIFF Verify Response:", res);
+
+                    if (res.success) {
+                        showLoading("ยืนยันตัวตนสำเร็จ...");
+
+                        saveSessionAndRender(res.user);
+                    } else {
+                        console.error("Token verification failed:", res.message);
+
+                        showLoginForm();
+                    }
+
+                    return;
+                }
+
+                /*
+                 * -------------------------------------------------------
+                 * 5. ยังไม่ได้ Login ใน LINE
+                 * -------------------------------------------------------
+                 */
+
+                if (liff.isInClient()) {
+                    showLoading("กำลังเข้าสู่ระบบ LINE...");
+
+                    /*
+                     * ให้ LINE จัดการ Login
+                     */
+
+                    liff.login();
+
+                    return;
+                }
+
+                /*
+                 * -------------------------------------------------------
+                 * 6. Browser ปกติ (ไม่พบ Session และไม่ได้เปิดใน LINE)
+                 * ให้เปิดเข้าสู่หน้าหลักในฐานะ Guest ทันที (จะมีปุ่ม เข้าสู่ระบบ ใน Header)
+                 * -------------------------------------------------------
+                 */
+                renderApp(null);
+            } catch (err) {
+                console.warn("Auth or LIFF init failed, fallback to Guest mode:", err);
+                renderApp(null);
+            }
+        }
+
+        /* =========================================================
+     LOGIN USER
+  ========================================================= */
+
+        async function loginUser() {
+            const u = document.getElementById("username").value.trim();
+
+            const p = document.getElementById("password").value.trim();
+
+            const errorMsg = document.getElementById("error-msg");
+
+            const btn = document.getElementById("btn-login");
+
+            const btnText = document.getElementById("btn-text");
+
+            if (!u || !p) {
+                showError("กรุณากรอก Username และ Password");
+
+                return;
+            }
+
+            errorMsg.classList.add("hidden");
+
+            /*
+             * ป้องกันกดซ้ำ
+             */
+
+            btn.disabled = true;
+
+            btn.classList.add("opacity-50", "cursor-not-allowed");
+
+            btnText.textContent = "กำลังตรวจสอบ...";
+
+            try {
+                showLoading("กำลังตรวจสอบข้อมูล...");
+
+                const response = await fetch(GAS_WEBAPP_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8",
+                    },
+                    body: JSON.stringify({
+                        action: "checkUserLogin",
+                        username: u,
+                        password: p,
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error("Server HTTP " + response.status);
+                }
+                /*
+                 * รอ response จริง
+                 */
+
+                const res = await response.json();
+                console.log("Login Response:", res);
+                if (res.success) {
+                    saveSessionAndRender(res.user);
+                } else {
+                    hideLoading();
+                    showError(res.message || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
+                }
+            } catch (err) {
+                console.error("Login Error:", err);
+                hideLoading();
+                showError("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove("opacity-50", "cursor-not-allowed");
+                btnText.textContent = "เข้าสู่ระบบ";
+            }
+        }
+
+        /* =========================================================
+     SAVE SESSION
+  ========================================================= */
+        function saveSessionAndRender(user) {
+            localStorage.setItem("userSession", JSON.stringify(user));
+            renderApp(user);
+        }
+        /* =========================================================
+     RENDER APP
+  ========================================================= */
+
+        function renderApp(user) {
+            /*
+             * เปิด Loading
+             */
+
+            showLoading("กำลังโหลดหน้าหลัก...");
+
+            /*
+             * ซ่อน Login
+             */
+
+            document.getElementById("login-section").style.display = "none";
+
+            /*
+             * แสดง App
+             */
+
+            document.getElementById("app-section").style.display = "block";
+
+            const iframe = document.getElementById("formframe");
+
+            /*
+             * -------------------------------------------------------
+             * สำคัญมาก
+             *
+             * อย่า hideLoading() ตรงนี้
+             *
+             * ให้ iframe โหลดเสร็จก่อน
+             * -------------------------------------------------------
+             */
+
+            iframe.onload = function () {
+                console.log("Main application loaded");
+
+                showLoading("ระบบพร้อมใช้งาน...");
+
+                /*
+                 * หน่วงเล็กน้อยเพื่อให้ผู้ใช้เห็น
+                 * สถานะว่าระบบพร้อมแล้ว
+                 */
+
+                setTimeout(function () {
+                    hideLoading();
+                }, 250);
+            };
+
+            iframe.onerror = function () {
+                console.error("Iframe loading error");
+
+                showLoadingError("ไม่สามารถโหลดหน้าหลักได้");
+            };
+
+            /*
+             * สร้าง URL (หากไม่มีข้อมูล User ให้โหลด URL ตรงแบบ Guest)
+             */
+
+            const userId = (user && user.userId) ? encodeURIComponent(user.userId) : "";
+            const targetIframeUrl = userId ? `${GAS_WEBAPP_URL}?userId=${userId}` : GAS_WEBAPP_URL;
+
+            console.log("Loading application:", targetIframeUrl);
+
+            /*
+             * เริ่มโหลด iframe
+             */
+
+            iframe.src = targetIframeUrl;
+        }
+
+        /* =========================================================
+     SHOW LOGIN FORM
+  ========================================================= */
+
+        function showLoginForm() {
+            /*
+             * ซ่อน App
+             */
+
+            document.getElementById("app-section").style.display = "none";
+
+            /*
+             * แสดง Login
+             */
+
+            document.getElementById("login-section").style.display = "flex";
+
+            /*
+             * ปิด Loading
+             */
+
+            hideLoading();
+        }
+
+        /* =========================================================
+     ERROR MESSAGE
+  ========================================================= */
+
+        function showError(msg) {
+            const errorMsg = document.getElementById("error-msg");
+
+            const errorText = document.getElementById("error-text");
+
+            errorText.textContent = msg;
+
+            errorMsg.classList.remove("hidden");
+        }
+
+        /* =========================================================
+     LOADING
+  ========================================================= */
+
+        function showLoading(text) {
+            const overlay = document.getElementById("loadingOverlay");
+
+            const textEl = document.getElementById("loadingText");
+
+            const errorEl = document.getElementById("loadingError");
+
+            const retryBtn = document.getElementById("loadingRetry");
+
+            if (textEl) {
+                textEl.textContent = text || "กำลังโหลดข้อมูล...";
+            }
+
+            if (errorEl) {
+                errorEl.style.display = "none";
+            }
+
+            if (retryBtn) {
+                retryBtn.style.display = "none";
+            }
+
+            if (overlay) {
+                overlay.classList.remove("loading-hide");
+            }
+        }
+
+        /* =========================================================
+     HIDE LOADING
+  ========================================================= */
+
+        function hideLoading() {
+            const overlay = document.getElementById("loadingOverlay");
+
+            if (!overlay) {
+                return;
+            }
+
+            overlay.classList.add("loading-hide");
+
+            /*
+             * หลัง Animation เสร็จ
+             * ซ่อน display จริง
+             */
+
+            setTimeout(function () {
+                if (overlay.classList.contains("loading-hide")) {
+                    overlay.style.display = "none";
+                }
+            }, 300);
+        }
+
+        /* =========================================================
+     LOADING ERROR
+  ========================================================= */
+
+        function showLoadingError(message) {
+            const overlay = document.getElementById("loadingOverlay");
+            const textEl = document.getElementById("loadingText");
+            const subText = document.getElementById("loadingSubText");
+            const errorEl = document.getElementById("loadingError");
+            const retryBtn = document.getElementById("loadingRetry");
+            if (overlay) {
+                overlay.style.display = "flex";
+                overlay.classList.remove("loading-hide");
+            }
+
+            if (textEl) {
+                textEl.textContent = "ไม่สามารถเปิดระบบได้";
+            }
+
+            if (subText) {
+                subText.textContent = "กรุณาตรวจสอบการเชื่อมต่อแล้วลองใหม่";
+            }
+
+            if (errorEl) {
+                errorEl.textContent = message || "เกิดข้อผิดพลาดในการเชื่อมต่อระบบ";
+                errorEl.style.display = "block";
+            }
+
+            if (retryBtn) {
+                retryBtn.style.display = "inline-block";
+            }
+        }
+
+        /* =========================================================
+     LOGOUT
+  ========================================================= */
+
+        function logout() {
+            localStorage.removeItem("userSession");
+
+            if (
+                typeof liff !== "undefined" &&
+                liff.isLoggedIn &&
+                liff.isLoggedIn()
+            ) {
+                liff.logout();
+            }
+
+            location.reload();
+        }
+    </script>
+</body>
+
 </html>
