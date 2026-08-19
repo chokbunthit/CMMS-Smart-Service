@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,6 +15,7 @@
   <!-- LINE LIFF SDK -->
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
+
 <body>
 
   <!-- =========================================================
@@ -63,17 +65,21 @@
       <!-- Profile Banner Card -->
       <div class="profile-card">
         <div style="display: flex; align-items: center; gap: 14px; position: relative; z-index: 2;">
-          <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=2563eb&color=fff" alt="Avatar" class="profile-avatar" />
+          <img id="userAvatar" src="https://ui-avatars.com/api/?name=User&background=2563eb&color=fff" alt="Avatar"
+            class="profile-avatar" />
           <div style="flex: 1; min-width: 0;">
-            <div style="font-size: 11px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px;">ยินดีต้อนรับ</div>
-            <div id="userName" style="font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <div style="font-size: 11px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px;">ยินดีต้อนรับ
+            </div>
+            <div id="userName"
+              style="font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
               กำลังโหลด...
             </div>
             <div id="userDept" style="font-size: 11.5px; opacity: 0.9; margin-top: 2px;">
               <i class="fa-solid fa-building-user" style="margin-right: 4px;"></i>CMMS Member
             </div>
           </div>
-          <a href="create-ticket.html" style="background: white; color: #1d4ed8; padding: 7px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+          <a href="create-ticket.html"
+            style="background: white; color: #1d4ed8; padding: 7px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
             <i class="fa-solid fa-plus"></i> แจ้งซ่อม
           </a>
         </div>
@@ -165,6 +171,15 @@
         </a>
       </div>
 
+      <!-- Subtle Rejected Count -->
+      <div style="margin-top: -6px; margin-bottom: 12px; display: flex; justify-content: flex-end; align-items: center;">
+        <a href="tracking.html?status=rejected" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-muted); text-decoration: none; padding: 3px 10px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-full); transition: all 0.2s;">
+          <i class="fa-solid fa-ban" style="font-size: 11px; color: #94a3b8;"></i>
+          <span>ยกเลิก/ปฏิเสธ:</span>
+          <span id="statReject" style="font-weight: 700; color: #64748b;">0</span>
+        </a>
+      </div>
+
       <!-- Recent Tickets Section -->
       <div class="card" style="margin-top: 10px;">
         <div class="card-header">
@@ -172,7 +187,8 @@
             <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i>
             รายการแจ้งซ่อมล่าสุด
           </span>
-          <a href="tracking.html" style="font-size: 11.5px; color: var(--primary); text-decoration: none; font-weight: 600;">
+          <a href="tracking.html"
+            style="font-size: 11.5px; color: var(--primary); text-decoration: none; font-weight: 600;">
             ดูทั้งหมด <i class="fa-solid fa-angle-right"></i>
           </a>
         </div>
@@ -255,7 +271,7 @@
         try {
           const cached = localStorage.getItem(`cmms_user_sheet_${user.userId}`);
           if (cached) sheetProfile = JSON.parse(cached);
-        } catch (e) {}
+        } catch (e) { }
       }
 
       const displayName = sheetProfile.display_name || user.display_name || user.displayName || "ผู้ใช้งาน LINE";
@@ -275,7 +291,7 @@
       try {
         // ดึงรายการงานเพื่อคำนวณสถิติและแสดงรายการล่าสุด
         const res = await CmmsApi.getTickets(userId);
-        
+
         let tickets = [];
         if (res && res.status === "success" && Array.isArray(res.data)) {
           tickets = res.data;
@@ -297,6 +313,7 @@
       let progress = 0;
       let waiting = 0;
       let completed = 0;
+      let reject = 0;
 
       tickets.forEach(t => {
         const s = (t.status || t.Status || "").toLowerCase();
@@ -306,6 +323,10 @@
           progress++;
         } else if (s.includes("comp") || s.includes("เสร็จ") || s.includes("เรียบร้อย") || s.includes("done")) {
           completed++;
+        } else if (s.includes("reject") || s.includes("ยกเลิก") || s.includes("ปฏิเสธ") || s.includes("ไม่อนุมัติ")) {
+          reject++;
+        } else if (s.includes("pending") || s.includes("รอดำเนินการ")) {
+          pending++;
         } else {
           pending++;
         }
@@ -315,6 +336,9 @@
       document.getElementById("statProgress").textContent = progress;
       document.getElementById("statWaiting").textContent = waiting;
       document.getElementById("statCompleted").textContent = completed;
+      if (document.getElementById("statReject")) {
+        document.getElementById("statReject").textContent = reject;
+      }
     }
 
     function renderRecentTickets(tickets) {
@@ -396,4 +420,5 @@
     }
   </script>
 </body>
+
 </html>
