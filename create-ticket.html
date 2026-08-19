@@ -1,561 +1,377 @@
 <!DOCTYPE html>
 <html lang="th">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AUT CMMS - แจ้งซ่อม</title>
 
-  <title>กรอกข้อมูลแจ้งซ่อม</title>
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Central Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
 
   <!-- FontAwesome -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
 
   <!-- LINE LIFF SDK -->
-  <script
-    charset="utf-8"
-    src="https://static.line-scdn.net/liff/edge/2/sdk.js">
-  </script>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    .fade-in {
-      animation: fadeIn 0.3s ease-in-out;
+    .type-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: var(--radius-md);
     }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(6px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .type-option {
+      cursor: pointer;
+      position: relative;
     }
 
-    .success-pop {
-      animation: successPop 0.35s ease-out;
+    .type-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
     }
 
-    @keyframes successPop {
-      from {
-        opacity: 0;
-        transform: scale(0.96) translateY(8px);
-      }
+    .type-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
 
-      to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
+    .type-option input:checked + .type-card.type-cm {
+      background: white;
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .type-option input:checked + .type-card.type-bm {
+      background: white;
+      color: var(--danger);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .scanner-btn {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: #e2e8f0;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .scanner-btn:active {
+      background: #cbd5e1;
+    }
+
+    .success-card {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 16px;
     }
   </style>
 </head>
+<body>
 
-<body class="bg-gray-100 min-h-screen p-4 flex items-center justify-center">
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay">
+    <div class="loading-icon-wrapper">
+      <div class="loading-spinner"></div>
+      <i class="fa-solid fa-paper-plane loading-tool-icon"></i>
+    </div>
+    <div id="loadingText">กำลังเตรียมข้อมูล...</div>
+    <div id="loadingSubText">กรุณารอสักครู่</div>
+    <div class="loading-progress">
+      <div class="loading-progress-bar"></div>
+    </div>
+  </div>
 
-  <!-- =========================================================
-       MAIN CARD
-  ========================================================== -->
-  <div
-    id="requestFormCard"
-    class="w-full max-w-md bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden fade-in">
+  <!-- App Container -->
+  <div class="app-container">
 
     <!-- Header -->
-    <div
-      class="px-5 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
-
-      <i class="fa-solid fa-paper-plane text-amber-500 text-xs"></i>
-
-      <span class="text-xs font-bold text-gray-700">
-        กรอกข้อมูลแจ้งซ่อม
-      </span>
-
-    </div>
-
-
-    <!-- =======================================================
-         SUCCESS RESULT
-    ======================================================== -->
-    <div
-      id="successResult"
-      class="hidden px-5 pt-5">
-
-      <div
-        class="success-pop rounded-2xl border border-green-200 bg-green-50 p-5 text-center">
-
-        <!-- Success Icon -->
-        <div
-          class="mx-auto w-14 h-14 rounded-full bg-green-100 text-green-600 flex items-center justify-center mb-3">
-
-          <i class="fa-solid fa-check text-2xl"></i>
-
-        </div>
-
-        <!-- Title -->
-        <h2
-          class="text-sm font-bold text-green-700">
-
-          แจ้งซ่อมสำเร็จ
-        </h2>
-
-        <p
-          id="successMessage"
-          class="text-xs text-green-600 mt-1">
-
-          ระบบบันทึกข้อมูลเรียบร้อยแล้ว
-        </p>
-
-
-        <!-- Ticket -->
-        <div
-          class="mt-4 bg-white border border-green-200 rounded-xl p-4">
-
-          <p
-            class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-
-            Ticket No.
-          </p>
-
-          <p
-            id="ticketNo"
-            class="mt-1 text-xl font-extrabold text-blue-600 tracking-wide">
-
-            -
-          </p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- =======================================================
-         REQUEST FORM
-    ======================================================== -->
-    <form
-      id="requestForm"
-      onsubmit="handleRequestSubmit(event)"
-      class="p-5 space-y-4">
-
-
-      <!-- Asset -->
-      <div>
-
-        <label
-          class="block text-[11px] font-bold text-gray-600 mb-1.5">
-
-          Asset Code
-          <span class="text-red-500">*</span>
-
-        </label>
-
-        <div class="relative">
-
-          <input
-            type="text"
-            id="reqAsset"
-            placeholder="เช่น FA-CR001"
-            list="req-asset-list"
-            oninput="onAssetInput(this.value)"          
-            class="w-full px-3 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500">
-
-          <datalist id="req-asset-list"></datalist>
-
-          <button
-            type="button"
-            onclick="goToScannerAssetQR('reqAsset')"
-            class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
-
-            <i class="fas fa-qrcode text-lg"></i>
-
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- Component -->
-      <div>
-
-        <label
-          class="block text-[11px] font-bold text-gray-600 mb-1.5">
-
-          Component Code
-
-        </label>
-
-        <div class="relative">
-
-          <input
-            type="text"
-            id="reqComp"
-            placeholder="เช่น FA-CR001-MT01"
-            list="req-component-list"
-            class="w-full px-3 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500">
-
-          <datalist id="req-component-list"></datalist>
-
-          <button
-            type="button"
-            onclick="goToScannerAssetQR('reqComp')"
-            class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
-
-            <i class="fas fa-qrcode text-lg"></i>
-
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- Department & Location (Optional with Datalist) -->
-      <div class="grid grid-cols-2 gap-3">
-
-        <!-- Department -->
+    <header class="app-header">
+      <div class="header-brand">
+        <a href="index.html" class="header-icon-btn" style="text-decoration: none;" title="กลับ">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
         <div>
-          <label class="block text-[11px] font-bold text-gray-600 mb-1.5">
-            Department
-          </label>
-          <input
-            type="text"
-            id="reqDept"
-            placeholder="เช่น PP, MT"
-            list="req-dept-list"
-            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500">
-          <datalist id="req-dept-list"></datalist>
+          <h1 class="header-title">แจ้งซ่อม</h1>
+          <p class="header-subtitle">แบบฟอร์มบันทึกแจ้งซ่อมเครื่องจักร</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="tracking.html" class="header-icon-btn" title="ติดตามงาน">
+          <i class="fa-solid fa-list-check"></i>
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content fade-in">
+
+      <!-- Success Result Box (Hidden by default) -->
+      <div id="successResult" style="display: none;" class="success-card">
+        <div style="width: 52px; height: 52px; border-radius: 50%; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px;">
+          <i class="fa-solid fa-check"></i>
+        </div>
+        <h2 style="font-size: 16px; font-weight: 700; color: #15803d; margin-bottom: 4px;">แจ้งซ่อมสำเร็จ</h2>
+        <p id="successMessage" style="font-size: 12px; color: #166534;">ระบบได้บันทึกข้อมูลเรียบร้อยแล้ว</p>
+        
+        <div style="background: white; border: 1px solid #bbf7d0; border-radius: var(--radius-md); padding: 12px; margin: 16px 0;">
+          <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Ticket Number</div>
+          <div id="ticketNo" style="font-size: 22px; font-weight: 800; color: var(--primary); margin-top: 2px;">-</div>
         </div>
 
-        <!-- Location -->
-        <div>
-          <label class="block text-[11px] font-bold text-gray-600 mb-1.5">
-            Location
-          </label>
-          <input
-            type="text"
-            id="reqLoc"
-            placeholder="เช่น Factory 1"
-            list="req-loc-list"
-            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500">
-          <datalist id="req-loc-list"></datalist>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="resetForNewTicket()" class="btn-primary" style="flex: 1; font-size: 12px; padding: 10px; background: #e2e8f0; color: #334155;">
+            <i class="fa-solid fa-plus"></i> แจ้งงานเพิ่ม
+          </button>
+          <a href="tracking.html" class="btn-primary" style="flex: 1; font-size: 12px; padding: 10px; text-decoration: none;">
+            <i class="fa-solid fa-list-check"></i> ติดตามงาน
+          </a>
         </div>
-
       </div>
 
+      <!-- Request Form Card -->
+      <div id="formCard" class="card">
+        <form id="requestForm" onsubmit="handleRequestSubmit(event)">
 
-      <!-- Type -->
-      <div>
-
-        <label
-          class="block text-xs font-bold text-gray-700 mb-2">
-
-          ประเภท
-          <span class="text-red-500">*</span>
-
-        </label>
-
-        <div
-          class="grid grid-cols-2 gap-1 p-1 bg-gray-100/80 rounded-xl border border-gray-200/60">
-
-          <label class="cursor-pointer">
-
-            <input
-              type="radio"
-              name="reqType"
-              id="reqTypeCM"
-              value="CM"
-              checked
-              class="peer hidden">
-
-            <div
-              class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold text-gray-500 peer-checked:bg-white peer-checked:text-blue-600 peer-checked:shadow-sm">
-
-              <i class="fa-solid fa-wrench text-xs"></i>
-
-              แจ้งซ่อมทั่วไป
-
+          <!-- Asset Code -->
+          <div class="form-group">
+            <label class="form-label">
+              Asset Code (รหัสเครื่องจักร) <span class="required">*</span>
+            </label>
+            <div style="position: relative;">
+              <input
+                type="text"
+                id="reqAsset"
+                required
+                placeholder="เช่น FA-CR001 หรือสแกน QR"
+                list="req-asset-list"
+                oninput="onAssetInput(this.value)"
+                class="form-input"
+                style="padding-right: 42px;"
+              />
+              <datalist id="req-asset-list"></datalist>
+              <button type="button" onclick="scanQR('reqAsset')" class="scanner-btn" title="สแกน QR Code">
+                <i class="fa-solid fa-qrcode"></i>
+              </button>
             </div>
+          </div>
 
-          </label>
-
-
-          <label class="cursor-pointer">
-
-            <input
-              type="radio"
-              name="reqType"
-              id="reqTypeBM"
-              value="BM"
-              class="peer hidden">
-
-            <div
-              class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold text-gray-500 peer-checked:bg-white peer-checked:text-red-600 peer-checked:shadow-sm">
-
-              <i class="fa-solid fa-triangle-exclamation text-xs"></i>
-
-              เครื่องจักรหยุดทำงาน
-
+          <!-- Component Code -->
+          <div class="form-group">
+            <label class="form-label">
+              Component Code (รหัสชิ้นส่วน)
+            </label>
+            <div style="position: relative;">
+              <input
+                type="text"
+                id="reqComp"
+                placeholder="เช่น FA-CR001-MT01"
+                list="req-component-list"
+                class="form-input"
+                style="padding-right: 42px;"
+              />
+              <datalist id="req-component-list"></datalist>
+              <button type="button" onclick="scanQR('reqComp')" class="scanner-btn" title="สแกน QR Code">
+                <i class="fa-solid fa-qrcode"></i>
+              </button>
             </div>
+          </div>
 
-          </label>
+          <!-- Department & Location Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+            <div>
+              <label class="form-label">แผนก (Department)</label>
+              <input type="text" id="reqDept" placeholder="เช่น PP, MT" list="req-dept-list" class="form-input" />
+              <datalist id="req-dept-list"></datalist>
+            </div>
+            <div>
+              <label class="form-label">สถานที่ (Location)</label>
+              <input type="text" id="reqLoc" placeholder="เช่น Factory 1" list="req-loc-list" class="form-input" />
+              <datalist id="req-loc-list"></datalist>
+            </div>
+          </div>
 
-        </div>
+          <!-- Type (CM / BM) -->
+          <div class="form-group">
+            <label class="form-label">
+              ประเภทงานซ่อม <span class="required">*</span>
+            </label>
+            <div class="type-selector">
+              <label class="type-option">
+                <input type="radio" name="reqType" id="reqTypeCM" value="CM" checked />
+                <div class="type-card type-cm">
+                  <i class="fa-solid fa-wrench"></i> แจ้งซ่อมทั่วไป (CM)
+                </div>
+              </label>
 
+              <label class="type-option">
+                <input type="radio" name="reqType" id="reqTypeBM" value="BM" />
+                <div class="type-card type-bm">
+                  <i class="fa-solid fa-triangle-exclamation"></i> เครื่องหยุด (BM)
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Priority (Hidden default) -->
+          <input type="hidden" id="reqPriority" value="Normal" />
+
+          <!-- Description -->
+          <div class="form-group">
+            <label class="form-label">
+              รายละเอียดปัญหา / อาการเสีย <span class="required">*</span>
+            </label>
+            <textarea
+              id="reqDesc"
+              required
+              rows="3"
+              placeholder="ระบุอาการเสีย หรือปัญหาที่พบ..."
+              class="form-textarea"
+            ></textarea>
+          </div>
+
+          <!-- Image Upload -->
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-solid fa-camera" style="margin-right: 4px;"></i> รูปภาพประกอบ (ถ้ามี)
+            </label>
+            <input
+              type="file"
+              id="reqImageFile"
+              accept="image/*"
+              capture="environment"
+              class="form-input"
+              style="padding: 7px 10px; font-size: 11.5px; background: #f8fafc;"
+            />
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="submitBtn" class="btn-primary" style="margin-top: 8px;">
+            <i class="fa-solid fa-paper-plane"></i> ส่งแจ้งซ่อม
+          </button>
+        </form>
       </div>
 
+    </main>
 
-      <!-- Priority -->
-      <select
-        id="reqPriority"
-        class="hidden">
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+      <a href="index.html" class="nav-item">
+        <i class="fa-solid fa-house"></i>
+        <span>หน้าหลัก</span>
+      </a>
 
-        <option value="Normal">
-          ปกติ
-        </option>
+      <a href="tracking.html" class="nav-item">
+        <i class="fa-solid fa-list-check"></i>
+        <span>ติดตามงาน</span>
+      </a>
 
-        <option value="Medium">
-          ปานกลาง
-        </option>
+      <a href="create-ticket.html" class="nav-item-highlight active" title="แจ้งซ่อม">
+        <i class="fa-solid fa-plus"></i>
+      </a>
 
-        <option value="High">
-          ด่วน
-        </option>
+      <a href="tracking.html?filter=history" class="nav-item">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>ประวัติ</span>
+      </a>
 
-        <option value="Critical">
-          ด่วนที่สุด
-        </option>
-
-      </select>
-
-
-      <!-- Description -->
-      <div>
-
-        <label
-          class="block text-[11px] font-bold text-gray-600 mb-1.5">
-
-          รายละเอียดปัญหา
-          <span class="text-red-500">*</span>
-
-        </label>
-
-        <textarea
-          id="reqDesc"
-          rows="3"
-          required
-          placeholder="อธิบายอาการเสีย หรือปัญหาที่พบ..."
-          class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:border-blue-500"></textarea>
-
-      </div>
-
-
-      <!-- Image -->
-      <div>
-
-        <label
-          class="block text-[11px] font-bold text-gray-600 mb-1.5">
-
-          รูปภาพ (ถ้ามี)
-
-        </label>
-
-        <input
-          type="file"
-          id="reqImageFile"
-          accept="image/*"
-          capture="environment"
-          class="w-full text-[11px] text-gray-500 border border-gray-200 rounded-xl p-1.5 bg-gray-50/50">
-
-      </div>
-
-
-      <!-- Submit -->
-      <button
-        type="submit"
-        id="submitBtn"
-        class="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-2">
-
-        <i class="fa-solid fa-paper-plane text-xs"></i>
-
-        ส่งแจ้งซ่อม
-
-      </button>
-
-    </form>
+      <a href="profile.html" class="nav-item">
+        <i class="fa-solid fa-user"></i>
+        <span>โปรไฟล์</span>
+      </a>
+    </nav>
 
   </div>
 
-
-  <!-- =========================================================
-       LOADING OVERLAY
-  ========================================================== -->
-  <div
-    id="loadingOverlay"
-    class="fixed inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4">
-
-    <div
-      class="relative flex items-center justify-center">
-
-      <div
-        class="w-14 h-14 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin">
-      </div>
-
-      <i
-        class="fa-solid fa-wrench text-blue-600 text-sm absolute">
-      </i>
-
-    </div>
-
-    <p
-      id="loadingText"
-      class="mt-4 text-xs font-semibold text-gray-600 animate-pulse">
-
-      กำลังเริ่มต้นระบบ...
-
-    </p>
-
-    <p
-      id="loadingSubText"
-      class="mt-1 text-[10px] text-gray-400">
-
-      กรุณารอสักครู่
-
-    </p>
-
-  </div>
-
+  <!-- Shared Scripts -->
+  <script src="js/liff-auth.js"></script>
+  <script src="js/api.js"></script>
 
   <script>
-
-    // =========================================================
-    // CONFIG
-    // =========================================================
-
-    const LIFF_ID = "2011076465-Bpkiq0zw"////"2011045112-nTERJAZu";
-
-    const GAS_API_URL =
-      "https://script.google.com/macros/s/AKfycby1Itw5OmdQ6NRJ6dhkYnNLVN1PvIIhM_vIm7V-VSx_DrWg6-d8Cgo7dl5QoIUMy-Incw/exec";
-
-
-    // =========================================================
-    // GLOBAL DATA
-    // =========================================================
-
     let rawAssets = [];
     let rawComponents = [];
     let rawDepartments = [];
     let rawLocations = [];
+    let activeUser = null;
 
-    let lineUserId = "";
-    let lineDisplayName = "";
-    let linePictureUrl = "";
-
-
-    // =========================================================
-    // INITIALIZE
-    // =========================================================
-
-    async function init() {
-
-      showLoading(
-        "กำลังเชื่อมต่อระบบ LINE...",
-        "กรุณารอสักครู่"
-      );
+    window.addEventListener("load", async () => {
+      LiffAuth.showLoading("กำลังเชื่อมต่อระบบ...", "กรุณารอสักครู่");
 
       try {
-
-        await liff.init({
-          liffId: LIFF_ID
+        activeUser = await LiffAuth.init({
+          requiredAuth: false,
+          onReady: (user) => {
+            console.log("Ready with user:", user);
+          }
         });
 
-        if (!liff.isLoggedIn()) {
-          showLoading(
-            "กำลังเข้าสู่ระบบ LINE...",
-            "กรุณารอสักครู่"
-          );
-          liff.login();
-          return;
-        }
-
-        showLoading(
-          "กำลังตรวจสอบข้อมูลผู้ใช้งาน...",
-          "กรุณารอสักครู่"
-        );
-
-        const profile = await liff.getProfile();
-        lineUserId = profile.userId || "";
-        lineDisplayName = profile.displayName || "";
-        linePictureUrl = profile.pictureUrl || "";
-
         await loadMachineData();
-
+        checkUrlParams();
       } catch (err) {
-        console.error("LIFF Init Error:", err);
-        hideLoading();
-        alert("ไม่สามารถเชื่อมต่อระบบได้\nกรุณาลองเปิดหน้าใหม่อีกครั้ง");
+        console.error("Init Error:", err);
+      } finally {
+        LiffAuth.hideLoading();
       }
+    });
 
+    function checkUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      const assetParam = params.get("asset");
+      if (assetParam) {
+        const assetInput = document.getElementById("reqAsset");
+        if (assetInput) {
+          assetInput.value = assetParam;
+          onAssetInput(assetParam);
+        }
+      }
     }
-
-
-    // =========================================================
-    // LOAD MACHINES
-    // =========================================================
 
     async function loadMachineData() {
-
-      showLoading(
-        "กำลังโหลดข้อมูลเครื่องจักร...",
-        "กำลังเตรียมข้อมูลสำหรับแจ้งซ่อม"
-      );
-
       try {
+        const json = await CmmsApi.getMachines();
 
-        const res = await fetch(`${GAS_API_URL}?action=getMachines`);
+        if (json && json.status === "success") {
+          rawAssets = json.data?.assets || [];
+          rawComponents = json.data?.components || [];
+          rawDepartments = json.data?.departments || [];
+          rawLocations = json.data?.locations || [];
 
-        if (!res.ok) {
-          throw new Error(`HTTP Error ${res.status}`);
+          renderAssetDatalist();
+          renderDepartmentDatalist();
+          renderLocationDatalist();
         }
-
-        const json = await res.json();
-
-        if (json.status !== "success") {
-          throw new Error(json.message || "ไม่สามารถโหลดข้อมูลเครื่องจักรได้");
-        }
-
-        rawAssets = json.data?.assets || [];
-        rawComponents = json.data?.components || [];
-        rawDepartments = json.data?.departments || [];
-        rawLocations = json.data?.locations || [];
-
-        renderAssetDatalist();
-        renderDepartmentDatalist();
-        renderLocationDatalist();
-
-        hideLoading();
-
       } catch (e) {
-        console.error("Fetch Machine Data Error:", e);
-        hideLoading();
-        alert("ไม่สามารถโหลดข้อมูลเครื่องจักรได้\n" + (e.message || ""));
+        console.warn("Could not load machine lists:", e);
       }
-
     }
-
-
-    // =========================================================
-    // RENDER DATALISTS
-    // =========================================================
 
     function renderAssetDatalist() {
       const assetList = document.getElementById("req-asset-list");
+      if (!assetList) return;
       assetList.innerHTML = "";
 
       rawAssets.forEach(item => {
@@ -568,11 +384,11 @@
 
     function renderDepartmentDatalist() {
       const deptList = document.getElementById("req-dept-list");
+      if (!deptList) return;
       deptList.innerHTML = "";
 
       rawDepartments.forEach(item => {
         const opt = document.createElement("option");
-        // แสดงรหัส Dept เช่น PP, MT และชื่อเป็น Label
         const deptCode = item.Dept || item.deptCode || item.department || "";
         const deptName = item.Name || item.deptName || "";
         opt.value = deptCode;
@@ -583,160 +399,87 @@
 
     function renderLocationDatalist() {
       const locList = document.getElementById("req-loc-list");
+      if (!locList) return;
       locList.innerHTML = "";
 
       rawLocations.forEach(item => {
         const opt = document.createElement("option");
-        // ใส่ Description เป็น value เลย เช่น Factory 1
         const locDesc = item.Description || item.Location || item.name || "";
         opt.value = locDesc;
         locList.appendChild(opt);
       });
     }
 
-
-    // =========================================================
-    // ASSET INPUT & AUTO-FILL
-    // =========================================================
-
     function onAssetInput(val) {
-
-      // 1. กรอง Component
       const compList = document.getElementById("req-component-list");
-      compList.innerHTML = "";
+      if (compList) {
+        compList.innerHTML = "";
+        const filtered = rawComponents.filter(
+          c => c.assetCode === val || (c.compCode && c.compCode.startsWith(val))
+        );
+        filtered.forEach(item => {
+          const opt = document.createElement("option");
+          opt.value = item.compCode;
+          opt.label = item.compName ? `${item.compCode} - ${item.compName}` : item.compCode;
+          compList.appendChild(opt);
+        });
+      }
 
-      const filtered = rawComponents.filter(
-        c => c.assetCode === val || c.compCode.startsWith(val)
-      );
-
-      filtered.forEach(item => {
-        const opt = document.createElement("option");
-        opt.value = item.compCode;
-        opt.label = item.compName ? `${item.compCode} - ${item.compName}` : item.compCode;
-        compList.appendChild(opt);
-      });
-
-      // 2. ดึง Location & Department จาก Asset อัตโนมัติ (ถ้ามี match)
-      const matchedAsset = rawAssets.find(a => a.assetCode === val);
-      if (matchedAsset) {
+      const matched = rawAssets.find(a => a.assetCode === val);
+      if (matched) {
         const deptInput = document.getElementById("reqDept");
         const locInput = document.getElementById("reqLoc");
 
-        // แผนกใน asset เก็บเป็นรหัส (เช่น MT, PP)
-        if (matchedAsset.department || matchedAsset.dept || matchedAsset.Dept) {
-          deptInput.value = matchedAsset.department || matchedAsset.dept || matchedAsset.Dept;
+        if (deptInput && (matched.department || matched.dept || matched.Dept)) {
+          deptInput.value = matched.department || matched.dept || matched.Dept;
         }
-
-        // สถานที่ใน asset เก็บเป็นชื่อสถานที่ (เช่น Factory 1)
-        if (matchedAsset.location || matchedAsset.Location) {
-          locInput.value = matchedAsset.location || matchedAsset.Location;
+        if (locInput && (matched.location || matched.Location)) {
+          locInput.value = matched.location || matched.Location;
         }
       }
-
     }
 
-
-    // =========================================================
-    // QR SCANNER
-    // =========================================================
-
-    function goToScannerAssetQR(targetInputId) {
-
-      if (typeof liff !== "undefined" && liff.isInClient() && liff.scanCodeV2) {
-
-        liff.scanCodeV2()
-          .then(result => {
-            if (!result || !result.value) return;
-
-            const scannedValue = result.value.trim();
-            const input = document.getElementById(targetInputId);
-            if (!input) return;
-
-            input.value = scannedValue;
-
+    async function scanQR(targetInputId) {
+      try {
+        const scanned = await LiffAuth.scanQRCode();
+        if (scanned) {
+          const input = document.getElementById(targetInputId);
+          if (input) {
+            input.value = scanned;
             if (targetInputId === "reqAsset") {
-              onAssetInput(scannedValue);
+              onAssetInput(scanned);
             }
-          })
-          .catch(err => {
-            console.error("QR Scan Error:", err);
-          });
-
-      } else {
-        alert("การสแกน QR Code รองรับเฉพาะการใช้งานผ่านแอปพลิเคชัน LINE บนมือถือเท่านั้น");
-      }
-
-    }
-
-
-    // =========================================================
-    // BASE64
-    // =========================================================
-
-    function getBase64(file) {
-      return new Promise((resolve, reject) => {
-        if (!file) {
-          resolve("");
-          return;
+          }
         }
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-      });
+      } catch (err) {
+        alert(err.message || "การสแกน QR Code รองรับเฉพาะบนแอปพลิเคชัน LINE บนมือถือเท่านั้น");
+      }
     }
-
-
-    // =========================================================
-    // SUBMIT REQUEST
-    // =========================================================
 
     async function handleRequestSubmit(e) {
-
       e.preventDefault();
 
-      if (!lineUserId) {
-        alert("ระบบยังโหลดข้อมูลผู้ใช้งาน LINE ไม่เสร็จ\nกรุณารอสักครู่แล้วลองใหม่อีกครั้ง");
-        return;
-      }
-
       const btn = document.getElementById("submitBtn");
-
       btn.disabled = true;
-      btn.classList.add("opacity-60", "cursor-not-allowed");
-      btn.innerHTML = `
-        <i class="fa-solid fa-spinner fa-spin text-xs"></i>
-        กำลังส่งข้อมูล...
-      `;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งข้อมูล...`;
 
-      showLoading(
-        "กำลังบันทึกข้อมูลแจ้งซ่อม...",
-        "กรุณารอสักครู่ ระบบกำลังสร้าง Ticket"
-      );
+      LiffAuth.showLoading("กำลังบันทึกข้อมูลแจ้งซ่อม...", "ระบบกำลังสร้างเลขที่ Ticket");
 
       try {
-
         const file = document.getElementById("reqImageFile").files[0];
         let imageBase64 = "";
-
         if (file) {
-          showLoading(
-            "กำลังเตรียมรูปภาพ...",
-            "กรุณารอสักครู่"
-          );
-          imageBase64 = await getBase64(file);
+          LiffAuth.showLoading("กำลังเตรียมรูปภาพ...", "กรุณารอสักครู่");
+          imageBase64 = await CmmsApi.fileToBase64(file);
         }
 
         const selectedType = document.querySelector('input[name="reqType"]:checked').value;
+        const user = LiffAuth.getUser() || {};
 
-        // -----------------------------------------
-        // PAYLOAD (เพิ่ม department และ location)
-        // -----------------------------------------
         const payload = {
-          action: "createRepairRequest",
-          userId: lineUserId,
-          displayName: lineDisplayName,
-          pictureUrl: linePictureUrl,
+          userId: user.userId || "",
+          displayName: user.displayName || "ผู้ใช้งาน",
+          pictureUrl: user.pictureUrl || "",
           assetCode: document.getElementById("reqAsset").value.trim(),
           componentCode: document.getElementById("reqComp").value.trim(),
           department: document.getElementById("reqDept").value.trim(),
@@ -747,107 +490,45 @@
           image: imageBase64
         };
 
-        showLoading(
-          "กำลังบันทึกข้อมูลแจ้งซ่อม...",
-          "ระบบกำลังสร้างเลขที่ Ticket"
-        );
+        const resData = await CmmsApi.createRepairRequest(payload);
 
-        const response = await fetch(GAS_API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
-          body: JSON.stringify(payload)
-        });
+        LiffAuth.hideLoading();
 
-        if (!response.ok) {
-          throw new Error(`HTTP Error ${response.status}`);
-        }
-
-        showLoading(
-          "กำลังรับผลการบันทึก...",
-          "กรุณารอสักครู่"
-        );
-
-        const resData = await response.json();
-
-        if (resData.status === "success") {
+        if (resData && resData.status === "success") {
           const ticketNo = resData.ticketNo || "-";
-          hideLoading();
-
           document.getElementById("ticketNo").textContent = ticketNo;
           document.getElementById("successMessage").textContent = resData.message || "ระบบบันทึกข้อมูลเรียบร้อยแล้ว";
-          document.getElementById("successResult").classList.remove("hidden");
-
-          // Reset Form
-          document.getElementById("requestForm").reset();
-          document.getElementById("reqTypeCM").checked = true;
-          document.getElementById("req-component-list").innerHTML = "";
-
-          btn.disabled = false;
-          btn.classList.remove("opacity-60", "cursor-not-allowed");
-          btn.innerHTML = `
-            <i class="fa-solid fa-paper-plane text-xs"></i>
-            ส่งแจ้งซ่อม
-          `;
-          return;
+          document.getElementById("formCard").style.display = "none";
+          document.getElementById("successResult").style.display = "block";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          alert("ไม่สามารถบันทึกได้:\n" + (resData?.message || "เกิดข้อผิดพลาดจากระบบ"));
+          resetSubmitButton();
         }
 
-        hideLoading();
-        alert("ไม่สามารถบันทึกได้:\n" + (resData.message || "เกิดข้อผิดพลาดจากระบบ"));
-        resetSubmitButton();
-
       } catch (err) {
-        console.error("Create Repair Error:", err);
-        hideLoading();
+        LiffAuth.hideLoading();
+        console.error("Submit Error:", err);
         alert("เกิดข้อผิดพลาดในการเชื่อมต่อ:\n" + (err.message || "ไม่สามารถเชื่อมต่อระบบได้"));
         resetSubmitButton();
       }
-
     }
-
-
-    // =========================================================
-    // RESET SUBMIT BUTTON
-    // =========================================================
 
     function resetSubmitButton() {
       const btn = document.getElementById("submitBtn");
       if (!btn) return;
       btn.disabled = false;
-      btn.classList.remove("opacity-60", "cursor-not-allowed");
-      btn.innerHTML = `
-        <i class="fa-solid fa-paper-plane text-xs"></i>
-        ส่งแจ้งซ่อม
-      `;
+      btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> ส่งแจ้งซ่อม`;
     }
 
-
-    // =========================================================
-    // LOADING
-    // =========================================================
-
-    function showLoading(text, subText) {
-      const overlay = document.getElementById("loadingOverlay");
-      const textEl = document.getElementById("loadingText");
-      const subTextEl = document.getElementById("loadingSubText");
-
-      if (textEl) textEl.innerText = text || "กำลังโหลดข้อมูล...";
-      if (subTextEl) subTextEl.innerText = subText || "กรุณารอสักครู่";
-      if (overlay) overlay.classList.remove("hidden");
+    function resetForNewTicket() {
+      document.getElementById("requestForm").reset();
+      document.getElementById("reqTypeCM").checked = true;
+      document.getElementById("req-component-list").innerHTML = "";
+      document.getElementById("formCard").style.display = "block";
+      document.getElementById("successResult").style.display = "none";
+      resetSubmitButton();
     }
-
-    function hideLoading() {
-      const overlay = document.getElementById("loadingOverlay");
-      if (overlay) overlay.classList.add("hidden");
-    }
-
-    // =========================================================
-    // START
-    // =========================================================
-    init();
-
   </script>
-
 </body>
 </html>
