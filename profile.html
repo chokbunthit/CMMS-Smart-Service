@@ -1,1 +1,414 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AUT CMMS - ข้อมูลส่วนตัว</title>
 
+  <!-- Central Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+
+  <!-- LINE LIFF SDK -->
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    .profile-hero {
+      text-align: center;
+      padding: 24px 16px;
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+
+    .avatar-img {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--radius-full);
+      border: 3px solid var(--primary);
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .line-badge {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: #06c755;
+      color: white;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      border: 2px solid white;
+    }
+
+    .uid-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #f1f5f9;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      margin-top: 6px;
+      cursor: pointer;
+    }
+
+    .uid-pill:active {
+      background: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay">
+    <div class="loading-icon-wrapper">
+      <div class="loading-spinner"></div>
+      <i class="fa-solid fa-user loading-tool-icon"></i>
+    </div>
+    <div id="loadingText">กำลังโหลดข้อมูลส่วนตัว...</div>
+    <div id="loadingSubText">กรุณารอสักครู่</div>
+    <div class="loading-progress">
+      <div class="loading-progress-bar"></div>
+    </div>
+  </div>
+
+  <!-- App Container -->
+  <div class="app-container">
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <a href="index.html" class="header-icon-btn" style="text-decoration: none;" title="กลับ">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <h1 class="header-title">ข้อมูลส่วนตัว</h1>
+          <p class="header-subtitle">โปรไฟล์และข้อมูลผู้แจ้งซ่อม</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="header-icon-btn" onclick="copyUserId()" title="คัดลอก LINE ID">
+          <i class="fa-regular fa-copy"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content fade-in">
+
+      <!-- Profile Hero Card -->
+      <div class="profile-hero">
+        <div class="avatar-wrapper">
+          <img id="avatarImage" src="https://ui-avatars.com/api/?name=User&background=2563eb&color=fff" alt="User Avatar" class="avatar-img" />
+          <div class="line-badge" title="LINE Verified">
+            <i class="fa-brands fa-line"></i>
+          </div>
+        </div>
+
+        <h2 id="displayLineName" style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">
+          ผู้ใช้งาน LINE
+        </h2>
+        <p id="lineStatusMessage" style="font-size: 11.5px; color: var(--text-muted); font-style: italic;">
+          AUT CMMS Member
+        </p>
+
+        <div class="uid-pill" onclick="copyUserId()" title="แตะเพื่อคัดลอก">
+          <i class="fa-regular fa-id-badge"></i>
+          <span id="displayUserId">LINE ID: -</span>
+          <i class="fa-regular fa-copy" style="font-size: 10px;"></i>
+        </div>
+      </div>
+
+      <!-- Edit Profile Form -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i>
+            แก้ไขข้อมูลผู้แจ้งซ่อม
+          </span>
+        </div>
+
+        <form id="profileForm" onsubmit="handleProfileSubmit(event)">
+
+          <!-- Full Name -->
+          <div class="form-group">
+            <label class="form-label">
+              ชื่อ - นามสกุล <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="profName"
+              required
+              placeholder="ระบุชื่อและนามสกุลจริง"
+              class="form-input"
+            />
+          </div>
+
+          <!-- Phone -->
+          <div class="form-group">
+            <label class="form-label">
+              เบอร์โทรศัพท์ติดต่อ <span class="required">*</span>
+            </label>
+            <input
+              type="tel"
+              id="profPhone"
+              required
+              placeholder="เช่น 081-234-5678"
+              class="form-input"
+            />
+          </div>
+
+          <!-- Department -->
+          <div class="form-group">
+            <label class="form-label">แผนก / ฝ่าย (Department)</label>
+            <input
+              type="text"
+              id="profDept"
+              placeholder="เช่น ฝ่ายผลิต (PP), ซ่อมบำรุง (MT)"
+              list="dept-options"
+              class="form-input"
+            />
+            <datalist id="dept-options">
+              <option value="MT - ฝ่ายซ่อมบำรุง"></option>
+              <option value="PP - ฝ่ายผลิต"></option>
+              <option value="QA/QC - ฝ่ายควบคุมคุณภาพ"></option>
+              <option value="WH - คลังสินค้า"></option>
+              <option value="ENG - วิศวกรรม"></option>
+            </datalist>
+          </div>
+
+          <!-- Position / Role -->
+          <div class="form-group">
+            <label class="form-label">ตำแหน่งงาน (Position)</label>
+            <input
+              type="text"
+              id="profPosition"
+              placeholder="เช่น พนักงานฝ่ายผลิต, หัวหน้าแผนก"
+              class="form-input"
+            />
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label class="form-label">อีเมล (Email)</label>
+            <input
+              type="email"
+              id="profEmail"
+              placeholder="name@company.com"
+              class="form-input"
+            />
+          </div>
+
+          <!-- Save Button -->
+          <button type="submit" id="saveProfileBtn" class="btn-primary" style="margin-top: 10px;">
+            <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลส่วนตัว
+          </button>
+        </form>
+      </div>
+
+      <!-- Account Actions Card -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">
+            <i class="fa-solid fa-shield-halved" style="color: var(--secondary);"></i>
+            การจัดการบัญชี
+          </span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button onclick="clearCacheAndReload()" class="btn-primary" style="background: #f1f5f9; color: var(--text-main); font-size: 12px; padding: 10px; border: 1px solid var(--border-color);">
+            <i class="fa-solid fa-rotate-right"></i> ล้างแคชและรีเฟรชข้อมูล
+          </button>
+          
+          <button onclick="LiffAuth.logout()" class="btn-primary" style="background: #fef2f2; color: #dc2626; font-size: 12px; padding: 10px; border: 1px solid #fecaca;">
+            <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ (Logout)
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="index.html" class="nav-item">
+        <i class="fa-solid fa-house"></i>
+        <span>หน้าหลัก</span>
+      </a>
+
+      <a href="tracking.html" class="nav-item">
+        <i class="fa-solid fa-list-check"></i>
+        <span>ติดตามงาน</span>
+      </a>
+
+      <a href="create-ticket.html" class="nav-item-highlight" title="แจ้งซ่อม">
+        <i class="fa-solid fa-plus"></i>
+      </a>
+
+      <a href="tracking.html?filter=history" class="nav-item">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>ประวัติ</span>
+      </a>
+
+      <a href="profile.html" class="nav-item active">
+        <i class="fa-solid fa-user"></i>
+        <span>โปรไฟล์</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <!-- Shared Scripts -->
+  <script src="js/liff-auth.js"></script>
+  <script src="js/api.js"></script>
+
+  <script>
+    let activeUser = null;
+
+    window.addEventListener("load", async () => {
+      LiffAuth.showLoading("กำลังโหลดข้อมูลโปรไฟล์...", "กรุณารอสักครู่");
+
+      try {
+        activeUser = await LiffAuth.init({
+          requiredAuth: false,
+          onReady: (user) => {
+            renderProfile(user);
+          }
+        });
+
+        if (activeUser && activeUser.userId) {
+          await loadSavedProfileFromApi(activeUser.userId);
+        }
+      } catch (err) {
+        console.error("Profile Init Error:", err);
+      } finally {
+        LiffAuth.hideLoading();
+      }
+    });
+
+    function renderProfile(user) {
+      if (!user) return;
+
+      const avatarEl = document.getElementById("avatarImage");
+      const nameEl = document.getElementById("displayLineName");
+      const statusEl = document.getElementById("lineStatusMessage");
+      const uidEl = document.getElementById("displayUserId");
+
+      if (avatarEl && user.pictureUrl) avatarEl.src = user.pictureUrl;
+      if (nameEl) nameEl.textContent = user.displayName || "ผู้ใช้งาน LINE";
+      if (statusEl && user.statusMessage) statusEl.textContent = user.statusMessage;
+      if (uidEl) {
+        const shortId = user.userId ? `${user.userId.substring(0, 10)}...` : "Guest";
+        uidEl.textContent = `LINE UID: ${shortId}`;
+      }
+
+      // Default name in form if empty
+      const nameInput = document.getElementById("profName");
+      if (nameInput && !nameInput.value && user.displayName) {
+        nameInput.value = user.displayName;
+      }
+    }
+
+    async function loadSavedProfileFromApi(userId) {
+      try {
+        // โหลดจาก LocalStorage ก่อน
+        const cachedDetails = localStorage.getItem(`cmms_user_detail_${userId}`);
+        if (cachedDetails) {
+          populateForm(JSON.parse(cachedDetails));
+        }
+
+        const res = await CmmsApi.getUserProfile(userId);
+        if (res && res.status === "success" && res.data) {
+          populateForm(res.data);
+          localStorage.setItem(`cmms_user_detail_${userId}`, JSON.stringify(res.data));
+        }
+      } catch (e) {
+        console.warn("Could not fetch remote user profile:", e);
+      }
+    }
+
+    function populateForm(data) {
+      if (!data) return;
+      if (data.name || data.fullName) document.getElementById("profName").value = data.name || data.fullName;
+      if (data.phone || data.tel) document.getElementById("profPhone").value = data.phone || data.tel;
+      if (data.department || data.dept) document.getElementById("profDept").value = data.department || data.dept;
+      if (data.position || data.role) document.getElementById("profPosition").value = data.position || data.role;
+      if (data.email) document.getElementById("profEmail").value = data.email;
+    }
+
+    async function handleProfileSubmit(e) {
+      e.preventDefault();
+
+      const btn = document.getElementById("saveProfileBtn");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...`;
+
+      LiffAuth.showLoading("กำลังบันทึกข้อมูลส่วนตัว...", "กรุณารอสักครู่");
+
+      const profileData = {
+        name: document.getElementById("profName").value.trim(),
+        phone: document.getElementById("profPhone").value.trim(),
+        department: document.getElementById("profDept").value.trim(),
+        position: document.getElementById("profPosition").value.trim(),
+        email: document.getElementById("profEmail").value.trim(),
+        updatedAt: new Date().toISOString()
+      };
+
+      const userId = activeUser ? activeUser.userId : "guest";
+
+      // บันทึกลง local storage ทันที
+      localStorage.setItem(`cmms_user_detail_${userId}`, JSON.stringify(profileData));
+
+      try {
+        await CmmsApi.updateUserProfile(userId, profileData);
+        LiffAuth.hideLoading();
+        alert("บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว");
+      } catch (err) {
+        LiffAuth.hideLoading();
+        console.warn("API update profile error (saved locally):", err);
+        alert("บันทึกข้อมูลในอุปกรณ์เรียบร้อยแล้ว");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลส่วนตัว`;
+      }
+    }
+
+    function copyUserId() {
+      const uid = activeUser ? activeUser.userId : "";
+      if (!uid) {
+        alert("ไม่พบรหัสผู้ใช้งาน");
+        return;
+      }
+
+      navigator.clipboard.writeText(uid).then(() => {
+        alert("คัดลอก LINE User ID เรียบร้อยแล้ว:\n" + uid);
+      }).catch(() => {
+        prompt("LINE User ID ของคุณคือ:", uid);
+      });
+    }
+
+    function clearCacheAndReload() {
+      if (confirm("คุณต้องการล้างข้อมูลแคชและรีโหลดหน้าใหม่ใช่หรือไม่?")) {
+        localStorage.clear();
+        location.reload();
+      }
+    }
+  </script>
+</body>
+</html>
