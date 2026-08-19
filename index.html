@@ -85,8 +85,29 @@
         </div>
       </div>
 
+      <!-- MT Technician Quick Access Banner (สำหรับช่างซ่อมบำรุง) -->
+      <a href="technician.html" style="text-decoration: none; display: block; margin-bottom: 14px;">
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #0369a1 100%); border-radius: var(--radius-lg); padding: 12px 14px; color: white; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 14px rgba(3, 105, 161, 0.25);">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 38px; height: 38px; border-radius: var(--radius-md); background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 17px; color: #38bdf8;">
+              <i class="fa-solid fa-screwdriver-wrench"></i>
+            </div>
+            <div>
+              <div style="font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                <span>เมนูช่างซ่อมบำรุง (MT View)</span>
+                <span style="background: #38bdf8; color: #082f49; font-size: 9.5px; padding: 1px 6px; border-radius: 10px; font-weight: 800;">MT</span>
+              </div>
+              <div style="font-size: 11px; opacity: 0.85;">จัดการใบงาน PM, ปิดงานซ่อม CM และบันทึกผล</div>
+            </div>
+          </div>
+          <div style="background: rgba(255,255,255,0.2); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px;">
+            <i class="fa-solid fa-chevron-right"></i>
+          </div>
+        </div>
+      </a>
+
       <!-- Quick Action Grid -->
-      <div class="action-grid">
+      <div class="action-grid" style="grid-template-columns: repeat(4, 1fr);">
         <a href="create-ticket.html" class="action-btn">
           <div class="action-btn-icon" style="background: #eff6ff; color: #2563eb;">
             <i class="fa-solid fa-paper-plane"></i>
@@ -94,12 +115,12 @@
           <span class="action-btn-label">แจ้งซ่อมใหม่</span>
         </a>
 
-        <button onclick="scanQRToTicket()" class="action-btn" style="border: none; cursor: pointer; width: 100%;">
-          <div class="action-btn-icon" style="background: #fdf4ff; color: #c026d3;">
-            <i class="fa-solid fa-qrcode"></i>
+        <a href="technician.html" class="action-btn">
+          <div class="action-btn-icon" style="background: #e0f2fe; color: #0284c7;">
+            <i class="fa-solid fa-toolbox"></i>
           </div>
-          <span class="action-btn-label">สแกน QR</span>
-        </button>
+          <span class="action-btn-label">งานช่าง MT</span>
+        </a>
 
         <a href="tracking.html" class="action-btn">
           <div class="action-btn-icon" style="background: #fefce8; color: #ca8a04;">
@@ -108,12 +129,12 @@
           <span class="action-btn-label">ติดตามสถานะ</span>
         </a>
 
-        <a href="profile.html" class="action-btn">
-          <div class="action-btn-icon" style="background: #f0fdf4; color: #16a34a;">
-            <i class="fa-solid fa-id-card"></i>
+        <button onclick="scanQRToTicket()" class="action-btn" style="border: 1px solid var(--border-color); cursor: pointer; width: 100%;">
+          <div class="action-btn-icon" style="background: #fdf4ff; color: #c026d3;">
+            <i class="fa-solid fa-qrcode"></i>
           </div>
-          <span class="action-btn-label">ข้อมูลส่วนตัว</span>
-        </a>
+          <span class="action-btn-label">สแกน QR</span>
+        </button>
       </div>
 
       <!-- Statistics Overview Grid -->
