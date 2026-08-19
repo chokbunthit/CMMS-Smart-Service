@@ -238,6 +238,9 @@
         <button class="filter-pill" onclick="setFilter('completed', this)">
           เสร็จสิ้น <span id="countCompleted" style="opacity: 0.8;">(0)</span>
         </button>
+        <button class="filter-pill" onclick="setFilter('rejected', this)">
+          ยกเลิก/ปฏิเสธ <span id="statReject" style="opacity: 0.8;">(0)</span>
+        </button>
       </div>
 
       <!-- Ticket Cards List -->
@@ -379,11 +382,15 @@
       const ticketParam = params.get("ticket");
 
       if (statusParam) {
-        const matchingBtn = Array.from(document.querySelectorAll(".filter-pill")).find(btn =>
-          btn.getAttribute("onclick")?.includes(`'${statusParam}'`)
-        );
+        const paramLower = statusParam.toLowerCase();
+        const matchingBtn = Array.from(document.querySelectorAll(".filter-pill")).find(btn => {
+          const onclickAttr = (btn.getAttribute("onclick") || "").toLowerCase();
+          return onclickAttr.includes(`'${paramLower}'`) ||
+            (paramLower === "reject" && onclickAttr.includes("rejected")) ||
+            (paramLower === "rejected" && onclickAttr.includes("reject"));
+        });
         if (matchingBtn) {
-          setFilter(statusParam, matchingBtn);
+          setFilter(paramLower === "reject" ? "rejected" : statusParam, matchingBtn);
         }
       }
 
@@ -427,13 +434,14 @@
     }
 
     function updateFilterCounts() {
-      let pending = 0, progress = 0, waiting = 0, completed = 0;
+      let pending = 0, progress = 0, waiting = 0, completed = 0, reject = 0;
 
       allTickets.forEach(t => {
         const s = (t.status || t.Status || "").toLowerCase();
         if (s.includes("wait") || s.includes("รออะไหล่")) waiting++;
         else if (s.includes("prog") || s.includes("ซ่อม") || s.includes("กำลัง")) progress++;
         else if (s.includes("comp") || s.includes("เสร็จ") || s.includes("เรียบร้อย")) completed++;
+        else if (s.includes("reject") || s.includes("ยกเลิก") || s.includes("ไม่อนุมัติ") || s.includes("ปฏิเสธ")) reject++;
         else pending++;
       });
 
@@ -442,6 +450,9 @@
       document.getElementById("countProgress").textContent = `(${progress})`;
       document.getElementById("countWaiting").textContent = `(${waiting})`;
       document.getElementById("countCompleted").textContent = `(${completed})`;
+      if (document.getElementById("statReject")) {
+        document.getElementById("statReject").textContent = `(${reject})`;
+      }
     }
 
     function setFilter(status, btn) {
@@ -464,13 +475,15 @@
 
         // 1. Status Filter
         if (currentFilter === "pending") {
-          if (status.includes("prog") || status.includes("กำลัง") || status.includes("wait") || status.includes("รอ") || status.includes("เสร็จ") || status.includes("comp")) return false;
+          if (status.includes("prog") || status.includes("กำลัง") || status.includes("wait") || status.includes("รอ") || status.includes("เสร็จ") || status.includes("comp") || status.includes("reject") || status.includes("ยกเลิก") || status.includes("ไม่อนุมัติ") || status.includes("ปฏิเสธ")) return false;
         } else if (currentFilter === "progress") {
           if (!status.includes("prog") && !status.includes("กำลัง") && !status.includes("ซ่อม")) return false;
         } else if (currentFilter === "waiting") {
           if (!status.includes("wait") && !status.includes("รออะไหล่")) return false;
         } else if (currentFilter === "completed") {
           if (!status.includes("comp") && !status.includes("เสร็จ") && !status.includes("เรียบร้อย")) return false;
+        } else if (currentFilter === "rejected" || currentFilter === "reject") {
+          if (!status.includes("reject") && !status.includes("ยกเลิก") && !status.includes("ไม่อนุมัติ") && !status.includes("ปฏิเสธ")) return false;
         }
 
         // 2. Search Query Filter
@@ -563,10 +576,12 @@
       const status = ticket.status || ticket.Status || "รอดำเนินการ";
       const statusBadge = document.getElementById("modalStatusBadge");
       statusBadge.textContent = status;
+      const s = status.toLowerCase();
       statusBadge.className = "badge " + (
-        status.includes("เสร็จ") ? "badge-completed" :
-        status.includes("รอ") ? "badge-waiting" :
-        status.includes("กำลัง") ? "badge-progress" : "badge-pending"
+        s.includes("เสร็จ") || s.includes("comp") ? "badge-completed" :
+        s.includes("รอ") && s.includes("อะไหล่") ? "badge-waiting" :
+        s.includes("กำลัง") || s.includes("prog") || s.includes("ซ่อม") ? "badge-progress" :
+        s.includes("ยกเลิก") || s.includes("reject") || s.includes("ไม่อนุมัติ") || s.includes("ปฏิเสธ") ? "badge-rejected" : "badge-pending"
       );
 
       // Image
