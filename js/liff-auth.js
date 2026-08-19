@@ -5,8 +5,8 @@
  */
 
 const LiffAuth = (function () {
-  // Config: กำหนด LIFF ID กลางของระบบ
-  const DEFAULT_LIFF_ID = "2011076529-EKhCiseU";
+  // Config: กำหนด LIFF ID กลางของระบบ (ตรงกับที่ตั้งค่าใน Rich Menu)
+  const DEFAULT_LIFF_ID = "2011050588-FTDVMv4L";
   const STORAGE_KEY = "cmms_user_session";
 
   let currentUser = null;
