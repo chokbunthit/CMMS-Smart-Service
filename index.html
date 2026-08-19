@@ -247,10 +247,25 @@
       if (!user) return;
       const nameEl = document.getElementById("userName");
       const avatarEl = document.getElementById("userAvatar");
+      const deptEl = document.getElementById("userDept");
 
-      if (nameEl) nameEl.textContent = user.displayName || "ผู้ใช้งาน LINE";
-      if (avatarEl && user.pictureUrl) {
-        avatarEl.src = user.pictureUrl;
+      // ตรวจสอบข้อมูลจาก Sheet Users cache ถ้ามี
+      let sheetProfile = {};
+      if (user.userId) {
+        try {
+          const cached = localStorage.getItem(`cmms_user_sheet_${user.userId}`);
+          if (cached) sheetProfile = JSON.parse(cached);
+        } catch (e) {}
+      }
+
+      const displayName = sheetProfile.display_name || user.display_name || user.displayName || "ผู้ใช้งาน LINE";
+      const deptCode = sheetProfile.dept_code || user.dept_code || "";
+      const avatarUrl = sheetProfile.picture_url || user.pictureUrl || "";
+
+      if (nameEl) nameEl.textContent = displayName;
+      if (avatarEl && avatarUrl) avatarEl.src = avatarUrl;
+      if (deptEl) {
+        deptEl.innerHTML = `<i class="fa-solid fa-building-user" style="margin-right: 4px;"></i>${deptCode ? `แผนก ${deptCode}` : "CMMS Member"}`;
       }
     }
 
