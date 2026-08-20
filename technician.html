@@ -271,6 +271,100 @@
       display: block;
     }
 
+    /* Task Steps Reference Box (PM Style matching screenshot) */
+    .task-steps-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+
+    .task-steps-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .task-steps-content {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .task-step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 11.5px;
+      color: #334155;
+      line-height: 1.45;
+    }
+
+    .task-step-num {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-size: 10px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .badge-task-no {
+      background: #ecfeff;
+      color: #0891b2;
+      border: 1px solid #a5f3fc;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .badge-pm-type {
+      background: #f3e8ff;
+      color: #7e22ce;
+      border: 1px solid #e9d5ff;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .btn-save-comp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 18px;
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25);
+      transition: all 0.2s;
+    }
+
+    .btn-save-comp:hover {
+      background: #059669;
+    }
+
+    .btn-save-comp:active {
+      transform: scale(0.98);
+    }
+
     /* Photo Upload Box & Canvas */
     .photo-upload-grid {
       display: grid;
@@ -1121,85 +1215,148 @@
           <div style="display: flex; align-items: center; justify-content: space-between; margin: 16px 0 10px;">
             <span style="font-size: 13px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
               <i class="fa-solid fa-list-check" style="color: #0891b2;"></i>
-              รายการตรวจเช็คย่อย (${components.length} Tasks)
+              COMPONENTS IN THIS WO: (${components.length} Tasks)
             </span>
             <span style="font-size: 11px; color: var(--text-muted);">แตะเพื่อเปิด/ปิดฟอร์ม</span>
           </div>
         `;
 
         components.forEach((comp, idx) => {
-          const taskId = comp.task_no || `TASK-${idx+1}`;
+          const compKey = `${comp.task_no || 'T'}_${comp.equipment_code || comp.component_code || 'C'}_${idx}`.replace(/[^a-zA-Z0-9]/g, '_');
           const isDone = (comp.status || "").toLowerCase().includes("done") || (comp.status || "").toLowerCase().includes("comp");
 
           html += `
-            <div class="accordion-card ${isDone ? 'completed-task' : ''}" id="accCard_${taskId}">
-              <div class="accordion-header" onclick="toggleAccordion('${taskId}')">
+            <div class="accordion-card ${isDone ? 'completed-task' : ''}" id="accCard_${compKey}">
+              <div class="accordion-header" onclick="toggleAccordion('${compKey}')">
                 <div style="flex: 1; min-width: 0; padding-right: 8px;">
-                  <div style="font-size: 13px; font-weight: 700; color: var(--text-main);">
-                    ${comp.equipment_name || comp.equipment || `อุปกรณ์ชิ้นที่ ${idx+1}`}
+                  <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <span style="font-size: 13px; font-weight: 700; color: #1e40af;">
+                      ${escapeHtml(comp.equipment_code || comp.component_code || '')}
+                    </span>
+                    <span style="font-size: 13px; font-weight: 700; color: var(--text-main);">
+                      ${escapeHtml(comp.equipment_name || comp.equipment || `อุปกรณ์ชิ้นที่ ${idx+1}`)}
+                    </span>
+                    ${comp.task_no ? `<span class="badge-task-no">${escapeHtml(comp.task_no)}</span>` : ""}
+                    ${comp.pm_type ? `<span class="badge-pm-type">${escapeHtml(comp.pm_type)}</span>` : ""}
                   </div>
-                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-                    ${comp.equipment_code ? `<span style="background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-size: 10px; margin-right: 4px;">${comp.equipment_code}</span>` : ""}
-                    ${comp.checkItem || "ตรวจสอบทั่วไป"}
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">
+                    ${escapeHtml(comp.checkItem || "ตรวจสอบและบำรุงรักษาเชิงป้องกันตามรอบ")}
                   </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <span id="badgeTask_${taskId}" class="badge ${isDone ? 'badge-completed' : 'badge-pending'}" style="font-size: 10px;">
-                    ${isDone ? 'ตรวจแล้ว' : 'รอดำเนินการ'}
+                  <span id="badgeTask_${compKey}" class="badge ${isDone ? 'badge-completed' : 'badge-progress'}" style="font-size: 10px;">
+                    ${isDone ? '<i class="fa-solid fa-check"></i> เสร็จสิ้น' : '<i class="fa-solid fa-clock"></i> In Progress'}
                   </span>
-                  <i class="fa-solid fa-chevron-down acc-arrow" id="arrow_${taskId}" style="font-size: 12px; color: var(--text-sub); transition: transform 0.2s;"></i>
+                  <i class="fa-solid fa-chevron-down acc-arrow" id="arrow_${compKey}" style="font-size: 12px; color: var(--text-sub); transition: transform 0.2s;"></i>
                 </div>
               </div>
 
-              <div class="accordion-body ${idx === 0 ? 'open' : ''}" id="body_${taskId}">
-                ${comp.standardValue ? `
-                  <div style="font-size: 11px; background: #ecfeff; border: 1px solid #cffafe; padding: 6px 10px; border-radius: var(--radius-sm); color: #0e7490; margin-bottom: 10px;">
-                    <strong>ค่ามาตรฐาน:</strong> ${comp.standardValue}
+              <div class="accordion-body ${idx === 0 ? 'open' : ''}" id="body_${compKey}">
+                <!-- 1. Task Steps Reference Box (Steps list) -->
+                <div class="task-steps-box" id="taskStepsBox_${compKey}">
+                  <div class="task-steps-header">
+                    <i class="fa-solid fa-list-check" style="color: #2563eb;"></i>
+                    <span>Task: ${escapeHtml(comp.task_no || '-')} | ${escapeHtml(comp.pm_type || '-')}</span>
                   </div>
-                ` : ""}
+                  <div class="task-steps-content" id="taskStepsList_${compKey}">
+                    <div style="font-size: 11px; color: var(--text-muted);">
+                      <i class="fa-solid fa-spinner animate-spin"></i> กำลังโหลดขั้นตอน...
+                    </div>
+                  </div>
+                </div>
 
+                <!-- 2. Root Cause & Action Taken -->
                 <div class="form-group">
-                  <label class="form-label">ค่าที่วัดได้ / ผลการตรวจสอบ (Measured Value)</label>
-                  <input type="text" id="measured_${taskId}" class="form-input" placeholder="เช่น 55°C, 4.5 Bar, ปกติ" value="${comp.measuredValue || ''}" />
+                  <label class="form-label">Root Cause</label>
+                  <input type="text" id="rc_${compKey}" class="form-input" placeholder="..." value="${escapeHtml(comp.root_cause || '')}" />
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">การปฏิบัติงาน / สิ่งที่ทำ (Action Taken)</label>
-                  <textarea id="action_${taskId}" class="form-textarea" placeholder="ระบุสิ่งที่ทำ เช่น ทำความสะอาด, อัดจาระบี, ปรับตั้งแรงตึง..." style="min-height: 60px;">${comp.actionTaken || ''}</textarea>
+                  <label class="form-label">Action Taken</label>
+                  <input type="text" id="at_${compKey}" class="form-input" placeholder="..." value="${escapeHtml(comp.action_taken || '')}" />
                 </div>
 
-                <!-- Before & After Camera Capture -->
+                <!-- 3. Start & End DateTime (Grid 2 cols) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                  <div class="form-group">
+                    <label class="form-label">Start DateTime</label>
+                    <input type="datetime-local" id="sd_${compKey}" class="form-input" value="${formatDateTimeLocal(comp.start_date)}" onchange="calcWorkingTime('${compKey}')" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">End DateTime</label>
+                    <input type="datetime-local" id="ed_${compKey}" class="form-input" value="${formatDateTimeLocal(comp.end_date)}" onchange="calcWorkingTime('${compKey}')" />
+                  </div>
+                </div>
+
+                <!-- 4. Working Time (hrs) & Down Time (hrs) (Grid 2 cols) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                  <div class="form-group">
+                    <label class="form-label">Working Time (hrs)</label>
+                    <input type="number" step="0.1" id="wt_${compKey}" class="form-input" placeholder="ชม." value="${comp.working_time || ''}" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Down Time (hrs)</label>
+                    <input type="number" step="0.1" id="dt_${compKey}" class="form-input" placeholder="ชม." value="${comp.down_time || ''}" />
+                  </div>
+                </div>
+
+                <!-- 5. Measured Value -->
+                <div class="form-group">
+                  <label class="form-label">Measured Value</label>
+                  <input type="text" id="mv_${compKey}" class="form-input" placeholder="-" value="${escapeHtml(comp.measured_value || '')}" />
+                </div>
+
+                <!-- 6. Before & After Photos -->
                 <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">
-                  <i class="fa-solid fa-camera" style="margin-right: 4px;"></i>รูปถ่ายก่อน-หลังตรวจเช็ค
+                  <i class="fa-solid fa-camera" style="margin-right: 4px;"></i>Image Before / Image Result
                 </div>
                 <div class="photo-upload-grid">
                   <!-- Before -->
                   <div>
-                    <input type="file" id="cam_before_${taskId}" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelected(this, 'before_${taskId}')" />
-                    <div class="photo-box" id="box_before_${taskId}" onclick="triggerCamera('cam_before_${taskId}')">
-                      <i class="fa-solid fa-camera" style="font-size: 20px; color: #94a3b8; margin-bottom: 4px;"></i>
-                      <span style="font-size: 10.5px; font-weight: 600; color: #64748b;">รูปก่อนทำ (Before)</span>
+                    <input type="file" id="cam_before_${compKey}" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelected(this, 'before_${compKey}')" />
+                    <div class="photo-box ${comp.image_before ? 'has-image' : ''}" id="box_before_${compKey}" onclick="triggerCamera('cam_before_${compKey}')">
+                      ${comp.image_before ? `
+                        <img src="${comp.image_before}" class="photo-preview-img" alt="Before Photo" />
+                        <button type="button" class="photo-remove-btn" onclick="event.stopPropagation(); removePhoto('before_${compKey}')"><i class="fa-solid fa-xmark"></i></button>
+                      ` : `
+                        <i class="fa-solid fa-camera" style="font-size: 20px; color: #94a3b8; margin-bottom: 4px;"></i>
+                        <span style="font-size: 10.5px; font-weight: 600; color: #64748b;">Image Before</span>
+                      `}
                     </div>
                   </div>
                   <!-- After -->
                   <div>
-                    <input type="file" id="cam_after_${taskId}" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelected(this, 'after_${taskId}')" />
-                    <div class="photo-box" id="box_after_${taskId}" onclick="triggerCamera('cam_after_${taskId}')">
-                      <i class="fa-solid fa-camera" style="font-size: 20px; color: #94a3b8; margin-bottom: 4px;"></i>
-                      <span style="font-size: 10.5px; font-weight: 600; color: #64748b;">รูปหลังทำ (After)</span>
+                    <input type="file" id="cam_after_${compKey}" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelected(this, 'after_${compKey}')" />
+                    <div class="photo-box ${comp.image_result ? 'has-image' : ''}" id="box_after_${compKey}" onclick="triggerCamera('cam_after_${compKey}')">
+                      ${comp.image_result ? `
+                        <img src="${comp.image_result}" class="photo-preview-img" alt="Result Photo" />
+                        <button type="button" class="photo-remove-btn" onclick="event.stopPropagation(); removePhoto('after_${compKey}')"><i class="fa-solid fa-xmark"></i></button>
+                      ` : `
+                        <i class="fa-solid fa-camera" style="font-size: 20px; color: #94a3b8; margin-bottom: 4px;"></i>
+                        <span style="font-size: 10.5px; font-weight: 600; color: #64748b;">Image Result</span>
+                      `}
                     </div>
                   </div>
                 </div>
 
-                <button type="button" class="btn-subtask-save" onclick="saveSubTask('${taskId}', '${comp.equipment_code || ''}')">
-                  <i class="fa-solid fa-floppy-disk"></i> บันทึก Task ย่อยนี้
-                </button>
+                <!-- 7. Save Component Result Button -->
+                <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+                  <button type="button" class="btn-save-comp" onclick="saveSubTask('${compKey}', '${comp.task_no || ''}', '${comp.equipment_code || comp.component_code || ''}')">
+                    <i class="fa-solid fa-floppy-disk"></i> บันทึก
+                  </button>
+                </div>
               </div>
             </div>
           `;
         });
 
         container.innerHTML = html;
+
+        // Load Task Steps for all PM components
+        components.forEach((comp, idx) => {
+          const compKey = `${comp.task_no || 'T'}_${comp.equipment_code || comp.component_code || 'C'}_${idx}`.replace(/[^a-zA-Z0-9]/g, '_');
+          loadTaskStepsForPM(compKey, comp.task_no, comp.pm_type);
+        });
 
       } else {
         // ================= CM / BREAKDOWN: UNIFIED CLOSING FORM =================
@@ -1364,41 +1521,121 @@
     }
 
     /**
+     * Helper Utilities for PM Form
+     */
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatDateTimeLocal(val) {
+      if (!val) return "";
+      try {
+        const d = new Date(val);
+        if (isNaN(d.getTime())) return "";
+        const pad = n => String(n).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        const mm = pad(d.getMonth() + 1);
+        const dd = pad(d.getDate());
+        const hh = pad(d.getHours());
+        const min = pad(d.getMinutes());
+        return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+      } catch (e) {
+        return "";
+      }
+    }
+
+    function calcWorkingTime(safeKey) {
+      const sd = document.getElementById(`sd_${safeKey}`)?.value;
+      const ed = document.getElementById(`ed_${safeKey}`)?.value;
+      const wt = document.getElementById(`wt_${safeKey}`);
+      if (!sd || !ed || !wt) return;
+      const diffMs = new Date(ed) - new Date(sd);
+      if (diffMs > 0) {
+        wt.value = (diffMs / (1000 * 60 * 60)).toFixed(2);
+      }
+    }
+
+    /**
+     * ดึงขั้นตอน Task List (PM Steps) มาแสดงในกล่องอ้างอิง
+     */
+    async function loadTaskStepsForPM(safeKey, taskNo, pmType) {
+      const container = document.getElementById(`taskStepsList_${safeKey}`);
+      if (!container) return;
+      if (!taskNo && !pmType) {
+        container.innerHTML = '<div style="font-size: 11px; color: var(--text-muted);">ไม่มีรายการขั้นตอน Task</div>';
+        return;
+      }
+
+      try {
+        const data = await CmmsApi.getTaskListData(taskNo, pmType);
+        if (data && data.steps && data.steps.length > 0) {
+          container.innerHTML = data.steps.map(s => `
+            <div class="task-step-item">
+              <span class="task-step-num">${s.stepNo}</span>
+              <span class="task-step-text">${escapeHtml(s.stepName)}</span>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<div style="font-size: 11px; color: var(--text-muted);">ไม่มีขั้นตอนย่อยที่ระบุในระบบ</div>';
+        }
+      } catch (err) {
+        console.warn("loadTaskStepsForPM error:", err);
+        container.innerHTML = '<div style="font-size: 11px; color: var(--text-muted);">ไม่สามารถโหลดขั้นตอนได้</div>';
+      }
+    }
+
+    /**
      * =========================================================
      * SAVE SUBTASK (PM ACTION)
      * =========================================================
      */
-    async function saveSubTask(taskId, equipmentCode) {
-      const measured = document.getElementById(`measured_${taskId}`)?.value || "";
-      const action = document.getElementById(`action_${taskId}`)?.value || "";
-      const photoBefore = taskPhotos[`before_${taskId}`] || "";
-      const photoAfter = taskPhotos[`after_${taskId}`] || "";
+    async function saveSubTask(safeKey, taskNo, equipmentCode) {
+      const rc = document.getElementById(`rc_${safeKey}`)?.value || "";
+      const at = document.getElementById(`at_${safeKey}`)?.value || "";
+      const sd = document.getElementById(`sd_${safeKey}`)?.value || "";
+      const ed = document.getElementById(`ed_${safeKey}`)?.value || "";
+      const wt = document.getElementById(`wt_${safeKey}`)?.value || "";
+      const dt = document.getElementById(`dt_${safeKey}`)?.value || "";
+      const mv = document.getElementById(`mv_${safeKey}`)?.value || "";
+      const photoBefore = taskPhotos[`before_${safeKey}`] || "";
+      const photoAfter = taskPhotos[`after_${safeKey}`] || "";
 
-      LiffAuth.showLoading("กำลังบันทึก Task ย่อย...", taskId);
+      LiffAuth.showLoading("กำลังบันทึกข้อมูล...", taskNo || equipmentCode);
       try {
         const payload = {
           woNo: currentActiveWO,
-          task_no: taskId,
+          task_no: taskNo,
           equipment_code: equipmentCode,
-          measuredValue: measured,
-          actionTaken: action,
+          rootCause: rc,
+          actionTaken: at,
+          startDate: sd,
+          endDate: ed,
+          workingTime: wt,
+          downTime: dt,
+          measuredValue: mv,
           photoBefore: photoBefore,
           photoAfter: photoAfter,
-          updatedBy: activeUser ? activeUser.displayName : "Technician"
+          updatedBy: activeUser ? (activeUser.displayName || activeUser.name) : "Technician"
         };
 
         const res = await CmmsApi.saveSubTask(payload);
 
         // Update UI Indicator
-        const card = document.getElementById(`accCard_${taskId}`);
-        const badge = document.getElementById(`badgeTask_${taskId}`);
+        const card = document.getElementById(`accCard_${safeKey}`);
+        const badge = document.getElementById(`badgeTask_${safeKey}`);
         if (card) card.classList.add("completed-task");
         if (badge) {
           badge.className = "badge badge-completed";
-          badge.textContent = "บันทึกแล้ว";
+          badge.innerHTML = '<i class="fa-solid fa-check"></i> เสร็จสิ้น';
         }
 
-        alert(`บันทึกข้อมูล Task ${taskId} เรียบร้อยแล้ว!`);
+        alert(`บันทึกผลการปฏิบัติงาน ${taskNo || equipmentCode} เรียบร้อยแล้ว!`);
       } catch (e) {
         console.error("saveSubTask Error:", e);
         alert("เกิดข้อผิดพลาดในการบันทึก Task ย่อย");
