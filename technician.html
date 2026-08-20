@@ -237,33 +237,73 @@
       border-radius: var(--radius-lg);
       margin-bottom: 12px;
       overflow: hidden;
-      box-shadow: var(--shadow-sm);
-      transition: all 0.2s;
+    .accordion-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s ease-in-out;
     }
 
     .accordion-card.completed-task {
-      border-color: #bbf7d0;
-      background: #fcfdfc;
+      border-color: #86efac;
+      background: #ffffff;
     }
 
     .accordion-header {
-      padding: 14px 16px;
+      padding: 12px 14px;
       background: white;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
       user-select: none;
+      gap: 8px;
+    }
+
+    .accordion-header:hover {
+      background: #f8fafc;
     }
 
     .accordion-card.completed-task .accordion-header {
       background: #f0fdf4;
     }
 
+    .acc-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .acc-arrow {
+      font-size: 12px;
+      color: #64748b;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+    }
+
+    .acc-comp-code {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1d4ed8;
+      letter-spacing: -0.2px;
+    }
+
+    .acc-comp-name {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #475569;
+    }
+
     .accordion-body {
-      padding: 14px 16px;
-      background: #fafafa;
-      border-top: 1px solid var(--border-color);
+      padding: 16px;
+      background: #ffffff;
+      border-top: 1px solid #f1f5f9;
       display: none;
     }
 
@@ -276,12 +316,12 @@
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 10px;
-      padding: 12px 14px;
+      padding: 14px 16px;
       margin-bottom: 14px;
     }
 
     .task-steps-header {
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 700;
       color: #1e293b;
       margin-bottom: 10px;
@@ -293,7 +333,7 @@
     .task-steps-content {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .task-step-item {
@@ -301,7 +341,7 @@
       align-items: flex-start;
       gap: 8px;
       font-size: 11.5px;
-      color: #334155;
+      color: #475569;
       line-height: 1.45;
     }
 
@@ -321,23 +361,43 @@
     }
 
     .badge-task-no {
-      background: #ecfeff;
-      color: #0891b2;
-      border: 1px solid #a5f3fc;
-      font-size: 10.5px;
+      background: #f0fdfa;
+      color: #0d9488;
+      border: 1px solid #99f6e4;
+      font-size: 11px;
       font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 4px;
+      padding: 2px 8px;
+      border-radius: 6px;
     }
 
     .badge-pm-type {
-      background: #f3e8ff;
+      background: #faf5ff;
       color: #7e22ce;
       border: 1px solid #e9d5ff;
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 4px;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .badge-status-progress {
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .badge-status-done {
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 6px;
     }
 
     .btn-save-comp {
@@ -346,19 +406,19 @@
       justify-content: center;
       gap: 6px;
       padding: 8px 18px;
-      background: #10b981;
+      background: #059669;
       color: white;
       border: none;
       border-radius: 8px;
       font-size: 12.5px;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25);
+      box-shadow: 0 1px 3px rgba(5, 150, 105, 0.3);
       transition: all 0.2s;
     }
 
     .btn-save-comp:hover {
-      background: #059669;
+      background: #047857;
     }
 
     .btn-save-comp:active {
@@ -1228,26 +1288,21 @@
           html += `
             <div class="accordion-card ${isDone ? 'completed-task' : ''}" id="accCard_${compKey}">
               <div class="accordion-header" onclick="toggleAccordion('${compKey}')">
-                <div style="flex: 1; min-width: 0; padding-right: 8px;">
-                  <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                    <span style="font-size: 13px; font-weight: 700; color: #1e40af;">
-                      ${escapeHtml(comp.equipment_code || comp.component_code || '')}
-                    </span>
-                    <span style="font-size: 13px; font-weight: 700; color: var(--text-main);">
-                      ${escapeHtml(comp.equipment_name || comp.equipment || `อุปกรณ์ชิ้นที่ ${idx+1}`)}
-                    </span>
-                    ${comp.task_no ? `<span class="badge-task-no">${escapeHtml(comp.task_no)}</span>` : ""}
-                    ${comp.pm_type ? `<span class="badge-pm-type">${escapeHtml(comp.pm_type)}</span>` : ""}
-                  </div>
-                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">
-                    ${escapeHtml(comp.checkItem || "ตรวจสอบและบำรุงรักษาเชิงป้องกันตามรอบ")}
-                  </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span id="badgeTask_${compKey}" class="badge ${isDone ? 'badge-completed' : 'badge-progress'}" style="font-size: 10px;">
-                    ${isDone ? '<i class="fa-solid fa-check"></i> เสร็จสิ้น' : '<i class="fa-solid fa-clock"></i> In Progress'}
+                <div class="acc-header-left">
+                  <i class="fa-solid fa-chevron-down acc-arrow" id="arrow_${compKey}" style="${idx === 0 ? 'transform: rotate(180deg);' : ''}"></i>
+                  <span class="acc-comp-code">
+                    ${escapeHtml(comp.equipment_code || comp.component_code || '')}
                   </span>
-                  <i class="fa-solid fa-chevron-down acc-arrow" id="arrow_${compKey}" style="font-size: 12px; color: var(--text-sub); transition: transform 0.2s;"></i>
+                  <span class="acc-comp-name">
+                    ${escapeHtml(comp.equipment_name || comp.equipment || `อุปกรณ์ชิ้นที่ ${idx+1}`)}
+                  </span>
+                  ${comp.task_no ? `<span class="badge-task-no">${escapeHtml(comp.task_no)}</span>` : ""}
+                  ${comp.pm_type ? `<span class="badge-pm-type">${escapeHtml(comp.pm_type)}</span>` : ""}
+                </div>
+                <div class="accordion-header-right">
+                  <span id="badgeTask_${compKey}" class="${isDone ? 'badge-status-done' : 'badge-status-progress'}">
+                    ${isDone ? '<i class="fa-solid fa-check"></i> เสร็จสิ้น' : 'In Progress'}
+                  </span>
                 </div>
               </div>
 
@@ -1265,81 +1320,83 @@
                   </div>
                 </div>
 
-                <!-- 2. Root Cause & Action Taken -->
-                <div class="form-group">
-                  <label class="form-label">Root Cause</label>
-                  <input type="text" id="rc_${compKey}" class="form-input" placeholder="..." value="${escapeHtml(comp.root_cause || '')}" />
+                <!-- 2. Row 1: Root Cause & Action Taken (2 Columns Grid) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Root Cause</label>
+                    <input type="text" id="rc_${compKey}" class="form-input" placeholder="--" value="${escapeHtml(comp.root_cause || '')}" />
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Action Taken</label>
+                    <input type="text" id="at_${compKey}" class="form-input" placeholder="--" value="${escapeHtml(comp.action_taken || '')}" />
+                  </div>
                 </div>
 
-                <div class="form-group">
-                  <label class="form-label">Action Taken</label>
-                  <input type="text" id="at_${compKey}" class="form-input" placeholder="..." value="${escapeHtml(comp.action_taken || '')}" />
-                </div>
-
-                <!-- 3. Start & End DateTime (Grid 2 cols) -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                  <div class="form-group">
+                <!-- 3. Row 2: Start DateTime, End DateTime, Working Time (hrs) (3 Columns Grid) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                  <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label">Start DateTime</label>
                     <input type="datetime-local" id="sd_${compKey}" class="form-input" value="${formatDateTimeLocal(comp.start_date)}" onchange="calcWorkingTime('${compKey}')" />
                   </div>
-                  <div class="form-group">
+                  <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label">End DateTime</label>
                     <input type="datetime-local" id="ed_${compKey}" class="form-input" value="${formatDateTimeLocal(comp.end_date)}" onchange="calcWorkingTime('${compKey}')" />
                   </div>
-                </div>
-
-                <!-- 4. Working Time (hrs) & Down Time (hrs) (Grid 2 cols) -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                  <div class="form-group">
+                  <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label">Working Time (hrs)</label>
                     <input type="number" step="0.1" id="wt_${compKey}" class="form-input" placeholder="ชม." value="${comp.working_time || ''}" />
                   </div>
-                  <div class="form-group">
+                </div>
+
+                <!-- 4. Row 3: Down Time (hrs) & Measured Value (2 Columns Grid) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                  <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label">Down Time (hrs)</label>
                     <input type="number" step="0.1" id="dt_${compKey}" class="form-input" placeholder="ชม." value="${comp.down_time || ''}" />
                   </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Measured Value</label>
+                    <input type="text" id="mv_${compKey}" class="form-input" placeholder="--" value="${escapeHtml(comp.measured_value || '')}" />
+                  </div>
                 </div>
 
-                <!-- 5. Measured Value -->
-                <div class="form-group">
-                  <label class="form-label">Measured Value</label>
-                  <input type="text" id="mv_${compKey}" class="form-input" placeholder="-" value="${escapeHtml(comp.measured_value || '')}" />
-                </div>
-
-                <!-- 6. Before & After Photos -->
-                <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">
-                  <i class="fa-solid fa-camera" style="margin-right: 4px;"></i>Image Before / Image Result
-                </div>
-                <div class="photo-upload-grid">
+                <!-- 5. Row 4: Image Before & Image Result (2 Columns Grid) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                   <!-- Before -->
                   <div>
+                    <label class="form-label">Image Before</label>
                     <input type="file" id="cam_before_${compKey}" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelected(this, 'before_${compKey}')" />
-                    <div class="photo-box ${comp.image_before ? 'has-image' : ''}" id="box_before_${compKey}" onclick="triggerCamera('cam_before_${compKey}')">
+                    <div class="photo-box ${comp.image_before ? 'has-image' : ''}" id="box_before_${compKey}" onclick="triggerCamera('cam_before_${compKey}')" style="min-height: 80px;">
                       ${comp.image_before ? `
                         <img src="${comp.image_before}" class="photo-preview-img" alt="Before Photo" />
                         <button type="button" class="photo-remove-btn" onclick="event.stopPropagation(); removePhoto('before_${compKey}')"><i class="fa-solid fa-xmark"></i></button>
                       ` : `
-                        <i class="fa-solid fa-camera" style="font-size: 20px; color: #94a3b8; margin-bottom: 4px;"></i>
-                        <span style="font-size: 10.5px; font-weight: 600; color: #64748b;">Image Before</span>
+                        <div style="display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 11.5px; font-weight: 600;">
+                          <i class="fa-solid fa-camera" style="font-size: 16px; color: #2563eb;"></i>
+                          <span>เลือกไฟล์ / ถ่ายรูป</span>
+                        </div>
                       `}
                     </div>
                   </div>
                   <!-- After -->
                   <div>
+                    <label class="form-label">Image Result</label>
                     <input type="file" id="cam_after_${compKey}" accept="image/*" capture="environment" style="display: none;" onchange="handleImageSelected(this, 'after_${compKey}')" />
-                    <div class="photo-box ${comp.image_result ? 'has-image' : ''}" id="box_after_${compKey}" onclick="triggerCamera('cam_after_${compKey}')">
+                    <div class="photo-box ${comp.image_result ? 'has-image' : ''}" id="box_after_${compKey}" onclick="triggerCamera('cam_after_${compKey}')" style="min-height: 80px;">
                       ${comp.image_result ? `
                         <img src="${comp.image_result}" class="photo-preview-img" alt="Result Photo" />
                         <button type="button" class="photo-remove-btn" onclick="event.stopPropagation(); removePhoto('after_${compKey}')"><i class="fa-solid fa-xmark"></i></button>
                       ` : `
-                        <i class="fa-solid fa-camera" style="font-size: 20px; color: #94a3b8; margin-bottom: 4px;"></i>
-                        <span style="font-size: 10.5px; font-weight: 600; color: #64748b;">Image Result</span>
+                        <div style="display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 11.5px; font-weight: 600;">
+                          <i class="fa-solid fa-camera" style="font-size: 16px; color: #059669;"></i>
+                          <span>เลือกไฟล์ / ถ่ายรูป</span>
+                        </div>
                       `}
                     </div>
                   </div>
                 </div>
 
-                <!-- 7. Save Component Result Button -->
+                <!-- 6. Row 5: Save Component Result Button -->
                 <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
                   <button type="button" class="btn-save-comp" onclick="saveSubTask('${compKey}', '${comp.task_no || ''}', '${comp.equipment_code || comp.component_code || ''}')">
                     <i class="fa-solid fa-floppy-disk"></i> บันทึก
