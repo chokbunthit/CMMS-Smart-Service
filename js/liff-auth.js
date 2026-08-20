@@ -102,12 +102,49 @@ const LiffAuth = (function () {
         currentUser = {
           userId: profile.userId || "",
           displayName: profile.displayName || "ผู้ใช้งาน LINE",
+          name: profile.displayName || "ผู้ใช้งาน LINE",
           pictureUrl: profile.pictureUrl || "",
           statusMessage: profile.statusMessage || "",
           idToken: idToken,
           isLoggedIn: true,
-          authSource: "liff"
+          authSource: "liff",
+          deptCode: "",
+          empCode: "",
+          accessRights: "user"
         };
+
+        // ตรวจสอบและ Auto-Register ผู้ใช้ใน Google Sheets (GAS Backend)
+        try {
+          if (typeof CmmsApi !== "undefined" && CmmsApi.getUserProfile) {
+            const apiRes = await CmmsApi.getUserProfile(currentUser.userId, {
+              name: currentUser.displayName,
+              displayName: currentUser.displayName,
+              pictureUrl: currentUser.pictureUrl
+            });
+
+            if (apiRes && apiRes.status === "success" && apiRes.data) {
+              const uData = apiRes.data;
+              currentUser.deptCode = uData.dept_code || uData.deptCode || "";
+              currentUser.empCode = uData.emp_code || uData.empCode || "";
+              currentUser.username = uData.username || "";
+              currentUser.status = uData.status || "Active";
+              currentUser.accessRights = uData.access_rights || uData.accessRights || "user";
+              if (uData.display_name) {
+                currentUser.displayName = uData.display_name;
+              }
+
+              // ถ้าเป็น User ใหม่ หรือ ยังไม่ได้ระบุแผนก -> แสดง Modal แจ้งเตือนให้อัปเดต
+              const isProfilePage = window.location.pathname.toLowerCase().includes("profile.html");
+              if ((apiRes.isNewUser || apiRes.needsProfileUpdate || !currentUser.deptCode) && !isProfilePage) {
+                setTimeout(() => {
+                  showProfileUpdatePrompt(apiRes.isNewUser);
+                }, 400);
+              }
+            }
+          }
+        } catch (backendErr) {
+          console.warn("GAS User Profile sync warning:", backendErr);
+        }
 
         saveUser(currentUser);
         hideLoading();
@@ -223,6 +260,66 @@ const LiffAuth = (function () {
     location.reload();
   }
 
+  /**
+   * แสดง Modal แจ้งเตือนให้อัปเดตข้อมูลแผนกและ Display Name
+   */
+  function showProfileUpdatePrompt(isNewUser = false) {
+    if (document.getElementById("profilePromptModal")) return;
+
+    const title = isNewUser ? "ยินดีต้อนรับสมาชิกใหม่! 🎉" : "กรุณาอัปเดตข้อมูลโปรไฟล์ 📋";
+    const desc = isNewUser
+      ? "ระบบได้ลงทะเบียนบัญชี LINE ของท่านเรียบร้อยแล้ว กรุณาระบุ <strong>แผนก (Department)</strong> และตรวจสอบ <strong>ชื่อที่ใช้แสดง</strong> เพื่อความถูกต้องในการแจ้งซ่อมและมอบหมายงาน"
+      : "ท่านยังไม่ได้ระบุ <strong>แผนก (Department)</strong> กรุณาอัปเดตข้อมูลเพื่อให้ระบบสามารถส่งต่องานและแจ้งเตือนได้อย่างถูกต้อง";
+
+    const modalHtml = `
+      <div id="profilePromptModal" style="
+        position: fixed; inset: 0; z-index: 99999;
+        background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center; padding: 20px;
+        animation: fadeInPrompt 0.25s ease-out;
+      ">
+        <div style="
+          background: white; border-radius: 20px; max-width: 360px; width: 100%;
+          padding: 24px 20px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+          animation: scaleUpPrompt 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        ">
+          <div style="
+            width: 56px; height: 56px; border-radius: 50%; background: #eff6ff;
+            color: #2563eb; display: inline-flex; align-items: center; justify-content: center;
+            font-size: 26px; margin: 0 auto 14px;
+          ">
+            <i class="fa-solid fa-id-card"></i>
+          </div>
+          <h3 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 8px;">${title}</h3>
+          <p style="font-size: 12.5px; color: #64748b; line-height: 1.55; margin: 0 0 20px;">
+            ${desc}
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <a href="profile.html" style="
+              display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+              padding: 12px; background: #2563eb; color: white; border-radius: 12px;
+              font-size: 13px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            ">
+              <i class="fa-solid fa-user-pen"></i> ไปตั้งค่าโปรไฟล์และแผนก
+            </a>
+            <button type="button" onclick="document.getElementById('profilePromptModal').remove()" style="
+              padding: 10px; background: transparent; color: #94a3b8; border: none;
+              font-size: 12px; font-weight: 600; cursor: pointer;
+            ">
+              ไว้ภายหลัง
+            </button>
+          </div>
+        </div>
+      </div>
+      <style>
+        @keyframes fadeInPrompt { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleUpPrompt { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+      </style>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", modalHtml);
+  }
+
   // Public API
   return {
     init,
@@ -232,6 +329,7 @@ const LiffAuth = (function () {
     scanQRCode,
     showLoading,
     hideLoading,
+    showProfileUpdatePrompt,
     DEFAULT_LIFF_ID
   };
 })();
