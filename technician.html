@@ -1287,17 +1287,41 @@
       const req = data.request || {};
       const asset = data.assetInfo || {};
 
-      const isPM = (wo.woType || "").toUpperCase().includes("PM");
-      const isDone = (wo.status || "").toLowerCase().includes("done") || (wo.status || "").toLowerCase().includes("comp");
+      const targetWO = groupedWorkOrders.find(w => w.woNo === (wo.woNo || wo.wo_code || currentActiveWO));
+      const isPM = (
+        (wo.woType || "").toUpperCase().includes("PM") ||
+        (wo.request_type || "").toUpperCase().includes("PM") ||
+        (wo.wo_type || "").toUpperCase().includes("PM") ||
+        (wo.workType || "").toUpperCase().includes("PM") ||
+        (targetWO && (targetWO.woType || "").toUpperCase().includes("PM")) ||
+        (currentActiveWO || "").toUpperCase().includes("PM") ||
+        (data.components && data.components.length > 0)
+      );
+
+      const isDone = (wo.status || (targetWO && targetWO.status) || "").toLowerCase().includes("done") || 
+                     (wo.status || "").toLowerCase().includes("comp") || 
+                     (wo.status || "").toLowerCase().includes("เสร็จ");
+
+      const woCode = wo.woNo || wo.wo_code || currentActiveWO || "-";
+      const reqCode = req.reqNo || req.request_code || wo.request_code || wo.reqNo || (targetWO && targetWO.reqNo) || "-";
+      const assetCode = asset.assetCode || asset.asset_code || wo.asset_code || (targetWO && targetWO.asset_code) || "-";
+      const assetName = asset.assetName || asset.asset_name || (targetWO && targetWO.asset_name) || "เครื่องจักรทั่วไป";
+      const location = asset.location || (targetWO && targetWO.location) || "-";
+      const dept = req.department || asset.department || (targetWO && targetWO.department_name) || "-";
+      const brand = asset.brand || "";
+      const model = asset.model || asset.description || "";
+      const brandModel = (brand || model) ? `${brand} ${model}`.trim() : "-";
+      const dueDate = wo.dueDate || wo.due_date || (targetWO && targetWO.dueDate) || "-";
+      const symptom = req.symptom || req.issue_description || (isPM ? "บำรุงรักษาเชิงป้องกันตามแผนงาน" : "-");
 
       headerContainer.innerHTML = `
         <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px;">
           <div>
             <div style="font-size: 16px; font-weight: 800; color: var(--text-main);">
-              ${wo.woNo || currentActiveWO}
+              ${escapeHtml(woCode)}
             </div>
             <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-              เลขที่แจ้งซ่อม: <strong>${req.reqNo || wo.reqNo || "-"}</strong>
+              เลขที่แจ้งซ่อม: <strong>${escapeHtml(reqCode)}</strong>
             </div>
           </div>
           <div style="text-align: right;">
@@ -1309,13 +1333,13 @@
 
         <div style="background: #f8fafc; border-radius: var(--radius-md); padding: 12px; margin-bottom: 10px;">
           <div style="font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 4px;">
-            <i class="fa-solid fa-cube" style="margin-right: 4px;"></i>${asset.assetCode || "-"} : ${asset.assetName || "-"}
+            <i class="fa-solid fa-cube" style="margin-right: 4px;"></i>${escapeHtml(assetCode)} : ${escapeHtml(assetName)}
           </div>
           <div style="font-size: 11.5px; color: var(--text-muted); display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 6px;">
-            <div><strong>สถานที่:</strong> ${asset.location || "-"}</div>
-            <div><strong>แผนก:</strong> ${req.department || "-"}</div>
-            <div><strong>ยี่ห้อ/รุ่น:</strong> ${asset.brand || "-"} ${asset.model || ""}</div>
-            <div><strong>กำหนดเสร็จ:</strong> ${wo.dueDate || "-"}</div>
+            <div><strong>สถานที่:</strong> ${escapeHtml(location)}</div>
+            <div><strong>แผนก:</strong> ${escapeHtml(dept)}</div>
+            <div><strong>ยี่ห้อ/รุ่น:</strong> ${escapeHtml(brandModel)}</div>
+            <div><strong>กำหนดเสร็จ:</strong> ${escapeHtml(dueDate)}</div>
           </div>
         </div>
 
@@ -1323,7 +1347,7 @@
           <div style="font-weight: 700; color: #b45309; font-size: 11px; margin-bottom: 2px;">
             <i class="fa-solid fa-triangle-exclamation" style="margin-right: 3px;"></i>อาการ/ปัญหาที่แจ้ง:
           </div>
-          <div>${req.symptom || "บำรุงรักษาเชิงป้องกันตามแผนงาน"}</div>
+          <div>${escapeHtml(symptom)}</div>
         </div>
       `;
     }
@@ -1334,7 +1358,17 @@
     function renderWOSpecificBody(data, targetKeyOrAction = null) {
       const container = document.getElementById("woSpecificContent");
       const wo = data.wo || {};
-      const isPM = (wo.woType || "").toUpperCase().includes("PM");
+      const targetWO = groupedWorkOrders.find(w => w.woNo === (wo.woNo || wo.wo_code || currentActiveWO));
+
+      const isPM = (
+        (wo.woType || "").toUpperCase().includes("PM") ||
+        (wo.request_type || "").toUpperCase().includes("PM") ||
+        (wo.wo_type || "").toUpperCase().includes("PM") ||
+        (wo.workType || "").toUpperCase().includes("PM") ||
+        (targetWO && (targetWO.woType || "").toUpperCase().includes("PM")) ||
+        (currentActiveWO || "").toUpperCase().includes("PM") ||
+        (data.components && data.components.length > 0)
+      );
 
       if (isPM) {
         // ================= PM: ACCORDION VIEW =================
@@ -1886,7 +1920,17 @@
       LiffAuth.showLoading("กำลังบันทึกปิดใบงาน...", currentActiveWO);
 
       try {
-        const isPM = (currentActiveWO || "").toUpperCase().includes("PM");
+        const wo = (currentDrawerData && currentDrawerData.wo) || {};
+        const targetWO = groupedWorkOrders.find(w => w.woNo === currentActiveWO);
+        const isPM = (
+          (wo.woType || "").toUpperCase().includes("PM") ||
+          (wo.request_type || "").toUpperCase().includes("PM") ||
+          (wo.wo_type || "").toUpperCase().includes("PM") ||
+          (wo.workType || "").toUpperCase().includes("PM") ||
+          (targetWO && (targetWO.woType || "").toUpperCase().includes("PM")) ||
+          (currentActiveWO || "").toUpperCase().includes("PM") ||
+          (currentDrawerData && currentDrawerData.components && currentDrawerData.components.length > 0)
+        );
         const technicianNote = document.getElementById("modalTechnicianNote")?.value || "";
 
         let closingData = {
@@ -1911,7 +1955,6 @@
         alert(`ปิดใบงาน ${currentActiveWO} เรียบร้อยแล้ว! ขอบคุณสำหรับการปฏิบัติงาน`);
 
         // อัปเดตข้อมูลใน local state
-        const targetWO = groupedWorkOrders.find(w => w.woNo === currentActiveWO);
         if (targetWO) targetWO.status = "Completed";
 
         renderStatsAndBadges();
