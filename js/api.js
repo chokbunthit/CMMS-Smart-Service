@@ -214,6 +214,33 @@ const CmmsApi = (function () {
     }
   }
 
+  // In-memory cache for PM Task List steps
+  const taskListCache = {};
+
+  /**
+   * 14. ดึงขั้นตอนการปฏิบัติงาน Task List สำหรับงาน PM (PM Steps)
+   */
+  async function getTaskListData(taskNo, pmType) {
+    const key = `${taskNo || ""}_${pmType || ""}`.trim();
+    if (taskListCache[key]) {
+      return taskListCache[key];
+    }
+    try {
+      let res;
+      try {
+        res = await request("getTaskListData", { taskNo, pmType }, "POST");
+      } catch (postErr) {
+        res = await request("getTaskListData", { taskNo, pmType }, "GET");
+      }
+      const data = (res && res.status === "success" && res.data) ? res.data : (res && res.steps ? res : { groupName: "", pmType: pmType, steps: [] });
+      taskListCache[key] = data;
+      return data;
+    } catch (e) {
+      console.warn("getTaskListData Error:", e);
+      return { groupName: "", pmType: pmType, steps: [] };
+    }
+  }
+
   /**
    * Helper Utility: ย่อขนาดรูปภาพผ่าน HTML Canvas ก่อนแปลงเป็น Base64
    * @param {File|Blob} file - ไฟล์รูปภาพจาก Input หรือ Camera
@@ -551,6 +578,7 @@ const CmmsApi = (function () {
     checkUserLogin,
     getMyWorkData,
     getWODrawerData,
+    getTaskListData,
     saveSubTask,
     closeWorkOrder,
     compressImage,
