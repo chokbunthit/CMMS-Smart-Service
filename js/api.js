@@ -7,7 +7,7 @@
 const CmmsApi = (function () {
   // Google Apps Script Web App Endpoint URL
   const DEFAULT_GAS_URL =
-    "https://script.google.com/macros/s/AKfycbz6CFnCuK_thrx-qfwPIsPSihoTzAegjNkgzHTkgEmszFUakvCAjtmxaiwxzZulU9K-Lw/exec";
+    "https://script.google.com/macros/s/AKfycbylJvzHtQeAgCLKsjGKQNK57gMx-0DAiKos50YG7tFCfEp1eF-V-YGCxw288qDP0Yje/exec";
 
   let baseUrl = DEFAULT_GAS_URL;
 
