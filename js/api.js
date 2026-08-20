@@ -7,7 +7,7 @@
 const CmmsApi = (function () {
   // Google Apps Script Web App Endpoint URL
   const DEFAULT_GAS_URL =
-    "https://script.google.com/macros/s/AKfycbxsom46y33Xro-XQGoviglfQrxOghPz_LJ_ZczdhPCo_UWc13hXc0h5E12J67bdF83k7g/exec";
+    "https://script.google.com/macros/s/AKfycbwTBNN6Ou3VOuJxf8whJfwSxLwgMMCimo3dzUU-Qojn1rrbLA13Q2YovcLZigTNoEF9Qw/exec";
 
   let baseUrl = DEFAULT_GAS_URL;
 
@@ -118,10 +118,10 @@ const CmmsApi = (function () {
   }
 
   /**
-   * 6. ดึงข้อมูลโปรไฟล์ผู้ใช้งาน
+   * 6. ดึงข้อมูลโปรไฟล์ผู้ใช้งาน และ Auto Register ถ้ายังไม่มี
    */
-  async function getUserProfile(userId) {
-    return await request("getUserProfile", { userId }, "POST");
+  async function getUserProfile(userId, profileData = {}) {
+    return await request("getUserProfile", { userId, ...profileData }, "POST");
   }
 
   /**
