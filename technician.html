@@ -228,6 +228,31 @@
       margin-bottom: 0;
     }
 
+    .btn-card-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: #f0fdf4;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-card-action:hover {
+      background: #16a34a;
+      color: white;
+      border-color: #16a34a;
+    }
+
+    .btn-card-action:active {
+      transform: scale(0.97);
+    }
+
     /* Detail / Closing Drawer State View */
     #detailDrawerContainer {
       display: none;
@@ -1106,21 +1131,21 @@
             <div class="wo-subtasks-preview">
               <div style="font-weight: 600; margin-bottom: 4px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center;">
                 <span><i class="fa-solid fa-list-check" style="color: var(--primary); margin-right: 4px;"></i>จุดตรวจเช็ค (${wo.subtasks.length} รายการ):</span>
-                <span style="font-size: 10px; color: #64748b; font-weight: normal;">แตะเพื่อเปิดงาน</span>
+                <span style="font-size: 10px; color: #64748b; font-weight: normal;">แตะจุดที่ต้องการเปิด</span>
               </div>
               ${previewList.map((st, sIdx) => {
-                const compKey = `${st.task_no || 'T'}_${st.equipment_code || st.component_code || 'C'}_${sIdx}`.replace(/[^a-zA-Z0-9]/g, '_');
+                const targetIdent = st.equipment_code || st.equipment || st.task_no || "";
                 return `
-                <div class="wo-subtask-item" onclick="event.stopPropagation(); openWorkOrderDetail('${wo.woNo}', '${compKey}')" title="แตะเพื่อเปิดจุดตรวจเช็คนี้โดยตรง">
+                <div class="wo-subtask-item" onclick="openWorkOrderDetail('${wo.woNo}', '${encodeURIComponent(targetIdent)}')" title="แตะเพื่อเปิดกรอกข้อมูลจุดนี้โดยตรง">
                   <i class="fa-regular fa-circle-dot" style="font-size: 8px; color: var(--primary);"></i>
-                  <span style="font-weight: 600;">${escapeHtml(st.equipment)}</span>
+                  <span style="font-weight: 600; color: #1e293b;">${escapeHtml(st.equipment)}</span>
                   ${st.equipment_code ? `<span style="font-size: 10px; color: #64748b;">(${escapeHtml(st.equipment_code)})</span>` : ""}
                   <i class="fa-solid fa-arrow-right" style="font-size: 9px; color: #94a3b8; margin-left: auto;"></i>
                 </div>
               `;
               }).join("")}
               ${wo.subtasks.length > 2 ? `
-                <div onclick="event.stopPropagation(); openWorkOrderDetail('${wo.woNo}', 'ALL')" style="font-size: 11px; color: var(--primary); font-weight: 700; margin-top: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px;" title="เปิดดูจุดตรวจเช็คทั้งหมด">
+                <div onclick="openWorkOrderDetail('${wo.woNo}', 'ALL')" style="font-size: 11px; color: var(--primary); font-weight: 700; margin-top: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px;" title="เปิดดูจุดตรวจเช็คทั้งหมด">
                   <span>+ ดูเพิ่มอีก ${wo.subtasks.length - 2} รายการ (เปิดดูทั้งหมด)</span>
                   <i class="fa-solid fa-chevron-right" style="font-size: 9px;"></i>
                 </div>
@@ -1130,7 +1155,7 @@
         }
 
         html += `
-          <div class="wo-card ${priorityClass}" onclick="openWorkOrderDetail('${wo.woNo}')">
+          <div class="wo-card ${priorityClass}">
             <div class="wo-header">
               <div>
                 <div class="wo-number">
@@ -1163,9 +1188,11 @@
 
             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--text-sub); border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 6px;">
               <span><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>กำหนดเสร็จ: ${wo.dueDate}</span>
-              <span style="color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 3px;">
-                เปิดใบงาน <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
-              </span>
+              <button type="button" class="btn-card-action" onclick="openWorkOrderDetail('${wo.woNo}', 'ALL')" title="เปิดใบงานเพื่อดูและบันทึกปิดงาน">
+                <i class="fa-solid fa-folder-open"></i>
+                <span>เปิดใบงาน / ปิดงาน</span>
+                <i class="fa-solid fa-chevron-right" style="font-size: 9px;"></i>
+              </button>
             </div>
           </div>
         `;
@@ -1203,22 +1230,31 @@
         // Scroll logic based on targetKeyOrAction
         if (targetKeyOrAction && targetKeyOrAction !== 'ALL') {
           setTimeout(() => {
-            let el = document.getElementById(`accCard_${targetKeyOrAction}`);
-            if (!el) {
-              const allCards = document.querySelectorAll('.accordion-card');
+            const targetRaw = decodeURIComponent(targetKeyOrAction).toLowerCase().trim();
+            const allCards = document.querySelectorAll('.accordion-card');
+            let targetCard = null;
+
+            for (const card of allCards) {
+              if (card.id && card.id.toLowerCase().includes(targetRaw)) {
+                targetCard = card;
+                break;
+              }
+            }
+            if (!targetCard) {
               for (const card of allCards) {
-                if (card.id && card.id.toLowerCase().includes(targetKeyOrAction.toLowerCase())) {
-                  el = card;
+                if (card.textContent && card.textContent.toLowerCase().includes(targetRaw)) {
+                  targetCard = card;
                   break;
                 }
               }
             }
-            if (el) {
-              el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+            if (targetCard) {
+              targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
             } else {
               window.scrollTo({ top: 0, behavior: "smooth" });
             }
-          }, 200);
+          }, 250);
         } else {
           window.scrollTo({ top: 0, behavior: "smooth" });
         }
@@ -1324,16 +1360,29 @@
           </div>
         `;
 
+        const targetRaw = decodeURIComponent(targetKeyOrAction || "").trim().toLowerCase();
+
         components.forEach((comp, idx) => {
           const compKey = `${comp.task_no || 'T'}_${comp.equipment_code || comp.component_code || 'C'}_${idx}`.replace(/[^a-zA-Z0-9]/g, '_');
           const isDone = (comp.status || "").toLowerCase().includes("done") || (comp.status || "").toLowerCase().includes("comp");
 
+          const cCode = String(comp.equipment_code || comp.component_code || "").trim().toLowerCase();
+          const cName = String(comp.equipment_name || comp.component_name || comp.equipment || "").trim().toLowerCase();
+          const cTask = String(comp.task_no || "").trim().toLowerCase();
+
           let shouldOpen = false;
           if (isExpandAll) {
             shouldOpen = true;
-          } else if (targetKeyOrAction && (targetKeyOrAction === compKey || compKey.toLowerCase().includes(targetKeyOrAction.toLowerCase()))) {
-            shouldOpen = true;
-          } else if (!targetKeyOrAction && idx === 0) {
+          } else if (targetRaw) {
+            if (
+              (cCode && (targetRaw === cCode || targetRaw.includes(cCode) || cCode.includes(targetRaw))) ||
+              (cName && (targetRaw === cName || targetRaw.includes(cName) || cName.includes(targetRaw))) ||
+              (cTask && (targetRaw === cTask || targetRaw.includes(cTask) || cTask.includes(targetRaw))) ||
+              compKey.toLowerCase().includes(targetRaw)
+            ) {
+              shouldOpen = true;
+            }
+          } else if (idx === 0) {
             shouldOpen = true;
           }
 
@@ -1346,7 +1395,7 @@
                     ${escapeHtml(comp.equipment_code || comp.component_code || '')}
                   </span>
                   <span class="acc-comp-name">
-                    ${escapeHtml(comp.equipment_name || comp.equipment || `อุปกรณ์ชิ้นที่ ${idx+1}`)}
+                    ${escapeHtml(comp.equipment_name || comp.component_name || comp.equipment || `อุปกรณ์ชิ้นที่ ${idx+1}`)}
                   </span>
                   ${comp.task_no ? `<span class="badge-task-no">${escapeHtml(comp.task_no)}</span>` : ""}
                   ${comp.pm_type ? `<span class="badge-pm-type">${escapeHtml(comp.pm_type)}</span>` : ""}
@@ -1718,10 +1767,6 @@
     async function loadTaskStepsForPM(safeKey, taskNo, pmType) {
       const container = document.getElementById(`taskStepsList_${safeKey}`);
       if (!container) return;
-      if (!taskNo && !pmType) {
-        container.innerHTML = '<div style="font-size: 11px; color: var(--text-muted);">ไม่มีรายการขั้นตอน Task</div>';
-        return;
-      }
 
       try {
         const data = await CmmsApi.getTaskListData(taskNo, pmType);
@@ -1733,11 +1778,33 @@
             </div>
           `).join('');
         } else {
-          container.innerHTML = '<div style="font-size: 11px; color: var(--text-muted);">ไม่มีขั้นตอนย่อยที่ระบุในระบบ</div>';
+          // Standard default inspection steps
+          const defaultSteps = [
+            { stepNo: 1, stepName: "ตรวจสอบสภาพทั่วไป เสียงผิดปกติ และการสั่นสะเทือนของอุปกรณ์" },
+            { stepNo: 2, stepName: "ทำความสะอาดตัวเรือน ขจัดคราบฝุ่น/น้ำมัน และตรวจเช็คจุดยึดแน่น" },
+            { stepNo: 3, stepName: "ตรวจเช็คระบบหล่อลื่น ขั้วต่อสายไฟ และอุปกรณ์ป้องกัน" },
+            { stepNo: 4, stepName: "ทดสอบการทำงานและวัดค่าพารามิเตอร์หลังการบำรุงรักษา" }
+          ];
+          container.innerHTML = defaultSteps.map(s => `
+            <div class="task-step-item">
+              <span class="task-step-num">${s.stepNo}</span>
+              <span class="task-step-text">${escapeHtml(s.stepName)}</span>
+            </div>
+          `).join('');
         }
       } catch (err) {
         console.warn("loadTaskStepsForPM error:", err);
-        container.innerHTML = '<div style="font-size: 11px; color: var(--text-muted);">ไม่สามารถโหลดขั้นตอนได้</div>';
+        const defaultSteps = [
+          { stepNo: 1, stepName: "ตรวจสอบสภาพทั่วไปและจุดยึดแน่นของอุปกรณ์" },
+          { stepNo: 2, stepName: "ทำความสะอาดและตรวจสอบระบบหล่อลื่น" },
+          { stepNo: 3, stepName: "ทดสอบการเดินเครื่องและบันทึกค่าพารามิเตอร์" }
+        ];
+        container.innerHTML = defaultSteps.map(s => `
+          <div class="task-step-item">
+            <span class="task-step-num">${s.stepNo}</span>
+            <span class="task-step-text">${escapeHtml(s.stepName)}</span>
+          </div>
+        `).join('');
       }
     }
 
