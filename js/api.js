@@ -7,7 +7,7 @@
 const CmmsApi = (function () {
   // Google Apps Script Web App Endpoint URL
   const DEFAULT_GAS_URL =
-    "https://script.google.com/macros/s/AKfycbxvyveo2EJPg52gjBMuZR-vPM5qSE4vGGp_BuJaVR0FxKuXir_7a6QGiSUupQY_9KvDAw/exec";
+    "https://script.google.com/macros/s/AKfycbyprBc-C0Me4hwY9ByhDf8xHLIERj90U1iHXtTIvaKIHFQPxEGCY8cfm6vXUaJbN_ZNZA/exec";
 
   let baseUrl = DEFAULT_GAS_URL;
 
@@ -565,7 +565,80 @@ const CmmsApi = (function () {
   }
 
   // Public Interface
+  
+  /**
+   * 15. ตรวจสอบสิทธิ์ Manager จาก Sheet Users
+   */
+  async function checkManagerRole(userId) {
+    try {
+      let res;
+      try {
+        res = await request("checkManagerRole", { userId: userId }, "POST");
+      } catch (e) {
+        res = await request("checkManagerRole", { userId: userId }, "GET");
+      }
+      return res;
+    } catch (err) {
+      console.error("checkManagerRole Error:", err);
+      return { success: false, isManager: false, message: err.message || String(err) };
+    }
+  }
+
+  /**
+   * 16. ดึงรายการงานค้างทั้งหมด (Pending Requests)
+   */
+  async function getPendingRequests() {
+    try {
+      let res;
+      try {
+        res = await request("getPendingRequests", {}, "POST");
+      } catch (e) {
+        res = await request("getPendingRequests", {}, "GET");
+      }
+      return res;
+    } catch (err) {
+      console.error("getPendingRequests Error:", err);
+      return { success: false, count: 0, data: [], message: err.message || String(err) };
+    }
+  }
+
+  /**
+   * 17. ดึงรายชื่อช่าง/ผู้รับเหมา และภาระงาน (Technicians & Vendors)
+   */
+  async function getAssigneeMasterData() {
+    try {
+      let res;
+      try {
+        res = await request("getAssignees", {}, "POST");
+      } catch (e) {
+        res = await request("getAssignees", {}, "GET");
+      }
+      const data = (res && res.data) ? res.data : res;
+      return data || { technicians: [], vendors: [] };
+    } catch (err) {
+      console.error("getAssigneeMasterData Error:", err);
+      return { technicians: [], vendors: [] };
+    }
+  }
+
+  /**
+   * 18. มอบหมายงานค้าง และออกใบสั่งงาน Work Order (Assign Task)
+   */
+  async function assignPendingTask(payload) {
+    try {
+      return await request("assignPendingTask", payload, "POST");
+    } catch (err) {
+      console.error("assignPendingTask Error:", err);
+      return { success: false, message: err.message || String(err) };
+    }
+  }
+
+  // Public Interface
   return {
+    checkManagerRole,
+    getPendingRequests,
+    getAssigneeMasterData,
+    assignPendingTask,
     setBaseUrl,
     getMachines,
     createRepairRequest,
