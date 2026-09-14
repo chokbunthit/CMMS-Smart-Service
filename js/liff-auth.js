@@ -128,10 +128,16 @@ const LiffAuth = (function () {
               currentUser.empCode = uData.emp_code || uData.empCode || "";
               currentUser.username = uData.username || "";
               currentUser.status = uData.status || "Active";
-              currentUser.accessRights = uData.access_rights || uData.accessRights || "user";
+              currentUser.accessRights = uData.access_rights || uData.accessRights || uData.role || "user";
+              currentUser.access_rights = currentUser.accessRights;
+              currentUser.role = uData.role || uData.access_rights || uData.accessRights || "user";
               if (uData.display_name) {
                 currentUser.displayName = uData.display_name;
               }
+              // Cache sheet profile so all pages can access instantly
+              try {
+                localStorage.setItem(`cmms_user_sheet_${currentUser.userId}`, JSON.stringify(uData));
+              } catch (e) {}
 
               // ถ้าเป็น User ใหม่ หรือ ยังไม่ได้ระบุแผนก -> แสดง Modal แจ้งเตือนให้อัปเดต
               const isProfilePage = window.location.pathname.toLowerCase().includes("profile.html");
