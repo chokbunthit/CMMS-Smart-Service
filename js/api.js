@@ -6,13 +6,12 @@
 
 const CmmsApi = (function () {
   // Google Apps Script Web App Endpoint URL
- const DEFAULT_API_URL =
+  // Backend API Endpoint URL (AUT CMMS v8 - Cloudflare Worker / Supabase)
+  const DEFAULT_API_URL =
     "https://aut-cmms-v8.chokbunthit.workers.dev/api/liff";
   const DEFAULT_GAS_URL = DEFAULT_API_URL;
 
-  let baseUrl = DEFAULT_GAS_URL;
   let baseUrl = (typeof localStorage !== "undefined" && localStorage.getItem("cmms_api_url")) || DEFAULT_API_URL;
-
 
   /**
    * กำหนด Web App URL หากต้องการเปลี่ยน
@@ -23,32 +22,47 @@ const CmmsApi = (function () {
 
   /**
    * ฟังก์ชันเรียก API กลางไปยัง Google Apps Script
-   * รองรับ CORS POST แบบ text/plain ตามมาตรฐานของ GAS Web App
+   * รองรับ CORS POST แบบ text/plain ตามมาตรฐานของ GAS Web App พร้อม Fallback
    */
   async function request(action, payload = {}, method = "POST") {
     try {
       let url = baseUrl;
-      let options = {};
+      let options = {
+        redirect: "follow"
+      };
 
       if (method.toUpperCase() === "GET") {
         const params = new URLSearchParams({ action, ...payload });
         url = `${baseUrl}?${params.toString()}`;
-        options = { method: "GET" };
+        options.method = "GET";
       } else {
         const bodyData = {
           action: action,
           ...payload
         };
-        options = {
-          method: "POST",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
-          body: JSON.stringify(bodyData)
+        options.method = "POST";
+        options.headers = {
+          "Content-Type": "text/plain;charset=utf-8"
         };
+        options.body = JSON.stringify(bodyData);
       }
 
-      const response = await fetch(url, options);
+      let response;
+      try {
+        response = await fetch(url, options);
+      } catch (fetchErr) {
+        // Fallback: หาก POST ติดปัญหา Network / Connection Closed ให้ลองส่งผ่าน GET (เฉพาะกรณีไม่มีรูปภาพขนาดใหญ่)
+        const hasLargeData = payload.image || payload.photoBefore || payload.photoAfter || payload.image_before || payload.image_result;
+        if (method.toUpperCase() === "POST" && !hasLargeData) {
+          console.warn(`POST to ${action} failed (${fetchErr.message}), attempting GET fallback...`);
+          const getParams = new URLSearchParams({ action, ...payload });
+          const fallbackUrl = `${baseUrl}?${getParams.toString()}`;
+          response = await fetch(fallbackUrl, { method: "GET", redirect: "follow" });
+        } else {
+          throw fetchErr;
+        }
+      }
+
       if (!response.ok) {
         throw new Error(`Server returned HTTP ${response.status}: ${response.statusText}`);
       }
@@ -568,7 +582,7 @@ const CmmsApi = (function () {
   }
 
   // Public Interface
-  
+
   /**
    * 15. ตรวจสอบสิทธิ์ Manager จาก Sheet Users
    */
@@ -636,12 +650,54 @@ const CmmsApi = (function () {
     }
   }
 
+  /**
+   * 19. หัวหน้าช่างกด Approve งาน (Lead Approve)
+   */
+  async function approveWorkOrder(payload) {
+    try {
+      return await request("approveWorkOrder", payload, "POST");
+    } catch (err) {
+      console.error("approveWorkOrder Error:", err);
+      throw err;
+    }
+  }
+
+  /**
+   * 20. ผู้แจ้งกดรับงานและให้คะแนนความพึงพอใจ (User Accept & Rate)
+   */
+  async function acceptRequest(payload) {
+    try {
+      return await request("acceptRequest", payload, "POST");
+    } catch (err) {
+      console.error("acceptRequest Error:", err);
+      throw err;
+    }
+  }
+
+  /**
+   * 21. จัดการ State Machine วงจรชีวิตงาน (Lifecycle)
+   */
+  async function updateTicketLifecycle(ticketId, action, payload = {}) {
+    try {
+      return await request("updateTicketLifecycle", { ticketId, action, ...payload }, "POST");
+    } catch (err) {
+      console.error("updateTicketLifecycle Error:", err);
+      return {
+        success: false,
+        message: err.message || String(err)
+      };
+    }
+  }
+
   // Public Interface
   return {
     checkManagerRole,
     getPendingRequests,
     getAssigneeMasterData,
     assignPendingTask,
+    approveWorkOrder,
+    acceptRequest,
+    updateTicketLifecycle,
     setBaseUrl,
     getMachines,
     createRepairRequest,
@@ -666,3 +722,4 @@ const CmmsApi = (function () {
 
 // ให้เข้าถึงได้ทั่วโลก
 window.CmmsApi = CmmsApi;
+
