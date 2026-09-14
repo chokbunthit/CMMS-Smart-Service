@@ -6,10 +6,13 @@
 
 const CmmsApi = (function () {
   // Google Apps Script Web App Endpoint URL
-  const DEFAULT_GAS_URL =
+ const DEFAULT_API_URL =
     "https://aut-cmms-v8.chokbunthit.workers.dev/api/liff";
+  const DEFAULT_GAS_URL = DEFAULT_API_URL;
 
   let baseUrl = DEFAULT_GAS_URL;
+  let baseUrl = (typeof localStorage !== "undefined" && localStorage.getItem("cmms_api_url")) || DEFAULT_API_URL;
+
 
   /**
    * กำหนด Web App URL หากต้องการเปลี่ยน
