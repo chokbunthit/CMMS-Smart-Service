@@ -7,7 +7,7 @@
 const CmmsApi = (function () {
   // Google Apps Script Web App Endpoint URL
   const DEFAULT_GAS_URL =
-    "https://script.google.com/macros/s/AKfycbwRC8dx-U_YZRtWqoh5z1mb31ABa58MYU-sWYWhfuG8IgQYIENmyHzBBmxu-7ANBNvnAg/exec";
+    "https://aut-cmms-v8.chokbunthit.workers.dev/api/liff";
 
   let baseUrl = DEFAULT_GAS_URL;
 
