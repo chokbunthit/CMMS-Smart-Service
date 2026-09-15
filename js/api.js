@@ -259,20 +259,28 @@ const CmmsApi = (function () {
   }
 
   /**
-   * Helper Utility: ย่อขนาดรูปภาพผ่าน HTML Canvas ก่อนแปลงเป็น Base64
+   * Helper Utility: ย่อและบีบอัดภาพผ่าน Web Worker (<= 1280px, <= 500 KB)
+   * โดยไม่บล็อก Main Thread หน้าจอไม่ค้าง
    * @param {File|Blob} file - ไฟล์รูปภาพจาก Input หรือ Camera
    * @param {number} maxWidth - ความกว้างสูงสุด (default 1280px)
    * @param {number} maxHeight - ความสูงสูงสุด (default 1280px)
-   * @param {number} quality - คุณภาพ JPEG 0.1 - 1.0 (default 0.75)
+   * @param {number} quality - คุณภาพเริ่มต้น (default 0.82)
    * @returns {Promise<string>} Base64 Data URL
    */
-  function compressImage(file, maxWidth = 1280, maxHeight = 1280, quality = 0.75) {
-    return new Promise((resolve, reject) => {
-      if (!file) {
-        resolve("");
-        return;
-      }
+  async function compressImage(file, maxWidth = 1280, maxHeight = 1280, quality = 0.82) {
+    if (!file) return "";
+    if (typeof CmmsImageCompressor !== "undefined" && CmmsImageCompressor.compress) {
+      const res = await CmmsImageCompressor.compress(file, {
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+        maxSizeBytes: 500 * 1024, // 500 KB limit
+        initialQuality: quality
+      });
+      return res.dataUrl || "";
+    }
 
+    // Fallback: หากยังไม่ได้โหลดโมดูล CmmsImageCompressor
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (event) => {
@@ -282,7 +290,6 @@ const CmmsApi = (function () {
           let width = img.width;
           let height = img.height;
 
-          // คำนวณ Aspect Ratio ใหม่หากขนาดเกิน
           if (width > height) {
             if (width > maxWidth) {
               height = Math.round((height * maxWidth) / width);
@@ -298,13 +305,11 @@ const CmmsApi = (function () {
           const canvas = document.createElement("canvas");
           canvas.width = width;
           canvas.height = height;
-
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
 
-          // แปลงเป็น JPEG พร้อมบีบอัดคุณภาพ
-          const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
-          resolve(compressedDataUrl);
+          let dataUrl = canvas.toDataURL("image/jpeg", quality);
+          resolve(dataUrl);
         };
         img.onerror = (err) => reject(err);
       };
@@ -313,10 +318,41 @@ const CmmsApi = (function () {
   }
 
   /**
-   * Helper Utility: แปลงไฟล์รูปภาพเป็น Base64 Data URL
+   * Helper Utility: แปลงไฟล์รูปภาพเป็น Base64 Data URL (ย่อ <= 1280px และบีบอัด <= 500 KB)
    */
-  function fileToBase64(file) {
-    return compressImage(file, 1280, 1280, 0.75);
+  async function fileToBase64(file) {
+    return await compressImage(file, 1280, 1280, 0.82);
+  }
+
+  /**
+   * อัปโหลดรูปภาพขึ้น Supabase File Storage ผ่าน API Backend
+   * @param {File|Blob|string} fileOrBase64 - ไฟล์หรือ Base64 Data URL
+   * @param {string} folder - โฟลเดอร์ใน bucket (เช่น requests, workorders, subtasks)
+   * @returns {Promise<{status: string, publicUrl: string, path: string}>}
+   */
+  async function uploadImage(fileOrBase64, folder = "requests") {
+    try {
+      let base64Data = "";
+      if (typeof fileOrBase64 === "string" && fileOrBase64.startsWith("data:image")) {
+        base64Data = fileOrBase64;
+      } else if (fileOrBase64) {
+        base64Data = await fileToBase64(fileOrBase64);
+      }
+
+      if (!base64Data) {
+        return { status: "error", message: "ไม่มีข้อมูลรูปภาพ", publicUrl: "" };
+      }
+
+      const res = await request("uploadImage", {
+        image: base64Data,
+        folder: folder
+      }, "POST");
+
+      return res;
+    } catch (err) {
+      console.error("CmmsApi.uploadImage error:", err);
+      return { status: "error", message: err.message || String(err), publicUrl: "" };
+    }
   }
 
   /* ==========================================================================
@@ -715,6 +751,7 @@ const CmmsApi = (function () {
     closeWorkOrder,
     compressImage,
     fileToBase64,
+    uploadImage,
     request,
     DEFAULT_GAS_URL
   };
