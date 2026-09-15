@@ -43,6 +43,13 @@ const LiffAuth = (function () {
   }
 
   /**
+   * ตรวจสอบว่าเปิดใช้งานผ่าน LINE App หรือไม่
+   */
+  function isInLiff() {
+    return typeof liff !== "undefined" && liff.isInClient && liff.isInClient();
+  }
+
+  /**
    * ดึงข้อมูล User จาก LocalStorage
    */
   function getCachedUser() {
@@ -180,10 +187,10 @@ const LiffAuth = (function () {
         return currentUser;
       }
 
-      // หากจำเป็นต้อง Auth แต่เปิดใน Browser ทั่วไป
+      // หากจำเป็นต้อง Auth แต่เปิดใน Browser ทั่วไป -> redirect ไปหน้า Login
       if (requiredAuth) {
-        showLoading("กำลังเปลี่ยนหน้าไป LINE Login...", "กรุณารอสักครู่");
-        liff.login();
+        hideLoading();
+        window.location.href = "login.html";
         return null;
       } else {
         // อนุญาต Guest
@@ -336,6 +343,7 @@ const LiffAuth = (function () {
     showLoading,
     hideLoading,
     showProfileUpdatePrompt,
+    isInLiff,
     DEFAULT_LIFF_ID
   };
 })();

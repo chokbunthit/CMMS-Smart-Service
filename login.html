@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AUT CMMS - เข้าสู่ระบบ</title>
+
+  <!-- Google Fonts & Central CSS -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+
+  <!-- LINE LIFF SDK -->
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
+    }
+
+    .login-container {
+      max-width: 360px;
+      width: 100%;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 24px;
+      padding: 40px 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .login-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: var(--primary-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 32px;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+    }
+
+    .login-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .login-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    .login-btn-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 20px;
+      background: #06C755;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 6px 16px rgba(6, 199, 85, 0.35);
+    }
+
+    .login-btn-line:hover {
+      background: #05b34a;
+      transform: translateY(-1px);
+    }
+
+    .login-btn-line:active {
+      transform: scale(0.98);
+    }
+
+    .login-btn-line img {
+      width: 24px;
+      height: 24px;
+    }
+
+    .login-hint {
+      margin-top: 20px;
+      padding: 12px;
+      background: #f0f9ff;
+      border-radius: 10px;
+      font-size: 11.5px;
+      color: #0369a1;
+      line-height: 1.5;
+    }
+
+    .login-hint i {
+      margin-right: 6px;
+    }
+
+    .login-footer {
+      margin-top: 24px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .loading-spinner-small {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    .login-btn-line.loading .loading-spinner-small {
+      display: block;
+    }
+
+    .login-btn-line.loading .btn-text {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <!-- Logo -->
+      <div class="login-logo">
+        <i class="fa-solid fa-wrench"></i>
+      </div>
+
+      <!-- Title -->
+      <h1 class="login-title">AUT CMMS</h1>
+      <p class="login-subtitle">Smart Maintenance Service</p>
+
+      <!-- LINE Login Button -->
+      <button id="btnLineLogin" class="login-btn-line" onclick="loginWithLine()">
+        <div class="loading-spinner-small"></div>
+        <span class="btn-text">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+            <path d="M12 2C6.48 2 2 5.82 2 10.5c0 4.01 3.44 7.39 8.09 8.27.31.07.74.21.85.48.1.24.06.61.03.85l-.15.86c-.05.26-.21 1.01.88.55.56-.24 9.11-5.35 9.11-9.71C21.68 5.82 17.52 2 12 2zm-3.2 6.4c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm6.4 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
+          </svg>
+          เข้าสู่ระบบด้วย LINE
+        </span>
+      </button>
+
+      <!-- Hint -->
+      <div class="login-hint">
+        <i class="fa-solid fa-circle-info"></i>
+        เปิดผ่านแอป <strong>LINE</strong> เพื่อใช้งานฟีเจอร์ครบถ้วน รวมถึงการสแกน QR Code
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <p class="login-footer">AUT CMMS v1.0 &copy; 2026</p>
+  </div>
+
+  <!-- Shared Scripts -->
+  <script src="js/liff-auth.js"></script>
+
+  <script>
+    const LIFF_ID = "2011050588-FTDVMv4L";
+
+    async function loginWithLine() {
+      const btn = document.getElementById("btnLineLogin");
+      btn.classList.add("loading");
+      btn.disabled = true;
+
+      try {
+        if (typeof liff === "undefined") {
+          throw new Error("ไม่สามารถโหลด LINE LIFF SDK ได้ กรุณาเชื่อมต่ออินเทอร์เน็ต");
+        }
+
+        await liff.init({ liffId: LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+        } else {
+          window.location.href = "index.html";
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+        alert(err.message || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+        btn.classList.remove("loading");
+        btn.disabled = false;
+      }
+    }
+
+    window.addEventListener("load", async () => {
+      try {
+        if (typeof liff !== "undefined") {
+          await liff.init({ liffId: LIFF_ID });
+
+          if (liff.isLoggedIn()) {
+            window.location.href = "index.html";
+          }
+        }
+      } catch (err) {
+        console.warn("LIFF init check failed:", err);
+      }
+    });
+  </script>
+</body>
+
+</html>
