@@ -63,7 +63,20 @@ const CmmsApi = (function () {
       }
 
       if (!response.ok) {
-        throw new Error(`Server returned HTTP ${response.status}: ${response.statusText}`);
+        let serverErrorMsg = "";
+        try {
+          const errJson = await response.json();
+          if (errJson && (errJson.message || errJson.error)) {
+            serverErrorMsg = errJson.message || errJson.error;
+          }
+        } catch (_) {
+          try {
+            const rawText = await response.text();
+            if (rawText) serverErrorMsg = rawText;
+          } catch (__) {}
+        }
+        const finalMsg = serverErrorMsg || `Server returned HTTP ${response.status}${response.statusText ? ': ' + response.statusText : ''}`;
+        throw new Error(finalMsg);
       }
 
       const result = await response.json();
@@ -226,6 +239,37 @@ const CmmsApi = (function () {
         message: "ปิดใบงานเรียบร้อยแล้ว (Local)",
         woNo: payload.woNo,
         closedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  // In-memory cache for Downtime Codes
+  let downtimeCodesCache = null;
+
+  /**
+   * ดึงรายการรหัสหยุดทำงาน (Lookup Downtime Codes) จากตาราง lookup_downtime_code
+   */
+  async function getLookupDowntimeCodes(forceRefresh = false) {
+    if (!forceRefresh && downtimeCodesCache && downtimeCodesCache.length > 0) {
+      return { status: "success", data: downtimeCodesCache };
+    }
+    try {
+      const res = await request("getLookupDowntimeCodes", {}, "POST");
+      if (res && res.status === "success" && Array.isArray(res.data) && res.data.length > 0) {
+        downtimeCodesCache = res.data;
+        return res;
+      }
+      const getRes = await request("getLookupDowntimeCodes", {}, "GET");
+      if (getRes && getRes.status === "success" && Array.isArray(getRes.data) && getRes.data.length > 0) {
+        downtimeCodesCache = getRes.data;
+        return getRes;
+      }
+      return res || { status: "success", data: [] };
+    } catch (e) {
+      console.warn("getLookupDowntimeCodes fetch error:", e);
+      return {
+        status: "success",
+        data: downtimeCodesCache || []
       };
     }
   }
@@ -748,6 +792,7 @@ const CmmsApi = (function () {
     getTaskListData,
     saveSubTask,
     closeWorkOrder,
+    getLookupDowntimeCodes,
     compressImage,
     fileToBase64,
     uploadImage,

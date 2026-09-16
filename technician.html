@@ -899,6 +899,9 @@
 
         // ดึงข้อมูลงานที่ได้รับมอบหมาย
         await fetchTechnicianWork();
+
+        // โหลดรหัส Downtime ล่วงหน้า
+        loadDowntimeCodes();
       } catch (err) {
         console.error("Technician Init Error:", err);
       } finally {
@@ -1237,6 +1240,11 @@
       try {
         const data = await CmmsApi.getWODrawerData(woNo);
         currentDrawerData = data;
+
+        // ตรวจสอบให้แน่ใจว่าโหลดรหัส Downtime แล้วสำหรับ CM Form
+        if (!cachedDowntimeCodes || cachedDowntimeCodes.length === 0) {
+          await loadDowntimeCodes();
+        }
 
         // Switch Screen State to Detail View
         document.getElementById("taskListView").style.display = "none";
@@ -1608,6 +1616,32 @@
               </div>
             </div>
 
+            <!-- Downtime Code Selection (Dropdown + Quick Chips) -->
+            <div class="form-group" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px; margin-bottom: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label class="form-label" style="margin-bottom: 0; color: #92400e; font-weight: 700;">
+                  <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; margin-right: 5px;"></i>รหัสเครื่องหยุดทำงาน (Downtime Code)
+                </label>
+                <span id="cmSelectedDowntimeBadge" style="font-size: 11px; font-weight: 700; color: #b45309; background: #fef3c7; border: 1px solid #fcd34d; padding: 2px 8px; border-radius: 6px; display: ${closing.downtimeCode ? 'inline-block' : 'none'};">
+                  ${closing.downtimeCode || ''}
+                </span>
+              </div>
+
+              <!-- Select Dropdown -->
+              <select id="cmDowntimeCode" class="form-input" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; background: #ffffff; color: #1e293b; outline: none; margin-bottom: 8px;" onchange="handleDowntimeCodeChange(this.value)">
+                <option value="">-- กรุณาเลือกรหัส Downtime Code --</option>
+                ${renderDowntimeOptions(closing.downtimeCode)}
+              </select>
+
+              <!-- Quick Select Buttons/Chips -->
+              <div style="font-size: 11px; color: #b45309; font-weight: 600; margin-bottom: 5px;">
+                <i class="fa-solid fa-hand-pointer" style="margin-right: 4px;"></i>หรือกดเลือกด่วน:
+              </div>
+              <div id="cmDowntimeChipsContainer" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                ${renderDowntimeChips(closing.downtimeCode)}
+              </div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">รายการอะไหล่ที่ใช้ (Spare Parts Used)</label>
               <input type="text" id="cmSpareParts" class="form-input" placeholder="เช่น ลูกปืน SKF x2, V-Belt B-42 x1" value="${closing.spareParts || ''}" />
@@ -1639,6 +1673,96 @@
           </div>
         `;
       }
+    }
+
+    /**
+     * =========================================================
+     * DOWNTIME CODES HELPER FUNCTIONS
+     * =========================================================
+     */
+    let cachedDowntimeCodes = [];
+
+    async function loadDowntimeCodes() {
+      try {
+        if (!cachedDowntimeCodes || cachedDowntimeCodes.length === 0) {
+          const res = await CmmsApi.getLookupDowntimeCodes();
+          if (res && res.status === "success" && Array.isArray(res.data) && res.data.length > 0) {
+            cachedDowntimeCodes = res.data;
+          }
+        }
+      } catch (e) {
+        console.warn("loadDowntimeCodes error:", e);
+      }
+    }
+
+    function renderDowntimeOptions(selectedCode = "") {
+      if (!cachedDowntimeCodes || cachedDowntimeCodes.length === 0) {
+        if (selectedCode) {
+          return `<option value="${escapeHtml(selectedCode)}" selected>${escapeHtml(selectedCode)}</option>`;
+        }
+        return '';
+      }
+      return cachedDowntimeCodes.map(item => {
+        const code = item.code || item.downtime_code || "";
+        const label = item.label || (item.name ? `${code} - ${item.name}` : code);
+        const isSel = (code === selectedCode) ? 'selected' : '';
+        return `<option value="${escapeHtml(code)}" ${isSel}>${escapeHtml(label)}</option>`;
+      }).join("");
+    }
+
+    function renderDowntimeChips(selectedCode = "") {
+      if (!cachedDowntimeCodes || cachedDowntimeCodes.length === 0) {
+        return '<span style="font-size: 11px; color: #94a3b8;"><i class="fa-solid fa-spinner animate-spin"></i> กำลังโหลดรหัส Downtime...</span>';
+      }
+      return cachedDowntimeCodes.map(item => {
+        const code = item.code || item.downtime_code || "";
+        const name = item.name || item.downtime_name || "";
+        const isSel = (code === selectedCode);
+        const activeBg = isSel ? '#d97706' : '#ffffff';
+        const activeColor = isSel ? '#ffffff' : '#475569';
+        const activeBorder = isSel ? '#b45309' : '#e2e8f0';
+        return `
+          <button type="button" class="btn-downtime-chip" data-code="${escapeHtml(code)}" onclick="selectDowntimeChip('${escapeHtml(code)}')"
+            style="background: ${activeBg}; color: ${activeColor}; border: 1px solid ${activeBorder}; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;">
+            <i class="fa-solid fa-tag" style="font-size: 9px; opacity: 0.7;"></i>
+            <span>${escapeHtml(code)}</span>
+            ${name ? `<span style="font-weight: 400; font-size: 10px; opacity: 0.85;">(${escapeHtml(name)})</span>` : ''}
+          </button>
+        `;
+      }).join("");
+    }
+
+    function selectDowntimeChip(code) {
+      const selectEl = document.getElementById("cmDowntimeCode");
+      if (selectEl) {
+        selectEl.value = code;
+        handleDowntimeCodeChange(code);
+      }
+    }
+
+    function handleDowntimeCodeChange(code) {
+      const badge = document.getElementById("cmSelectedDowntimeBadge");
+      if (badge) {
+        if (code) {
+          badge.textContent = code;
+          badge.style.display = "inline-block";
+        } else {
+          badge.style.display = "none";
+        }
+      }
+      const chips = document.querySelectorAll(".btn-downtime-chip");
+      chips.forEach(chip => {
+        const chipCode = chip.getAttribute("data-code");
+        if (chipCode === code) {
+          chip.style.background = "#d97706";
+          chip.style.color = "#ffffff";
+          chip.style.borderColor = "#b45309";
+        } else {
+          chip.style.background = "#ffffff";
+          chip.style.color = "#475569";
+          chip.style.borderColor = "#e2e8f0";
+        }
+      });
     }
 
     function renderExpenses(data) {
@@ -1971,6 +2095,7 @@
           closingData.actionTaken = document.getElementById("cmActionTaken")?.value || "";
           closingData.workTimeMinutes = document.getElementById("cmWorkTime")?.value || 30;
           closingData.downtimeMinutes = document.getElementById("cmDowntime")?.value || 0;
+          closingData.downtimeCode = document.getElementById("cmDowntimeCode")?.value || "";
           closingData.spareParts = document.getElementById("cmSpareParts")?.value || "";
           closingData.photoBefore = taskPhotos["cm_before"] || "";
           closingData.photoAfter = taskPhotos["cm_after"] || "";
