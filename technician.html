@@ -1311,6 +1311,45 @@
     }
 
     /**
+     * Check if a Work Order is Preventive Maintenance (PM) vs Corrective/Breakdown (CM/BM)
+     */
+    function isPMWorkOrder(wo, data) {
+      const targetWO = groupedWorkOrders.find(w => w.woNo === ((wo && (wo.woNo || wo.wo_code)) || currentActiveWO));
+      const typeStr = (
+        (wo && (wo.woType || wo.workorder_type || wo.wo_type || wo.request_type)) ||
+        (targetWO && (targetWO.woType || targetWO.workorder_type)) ||
+        ""
+      ).trim().toUpperCase();
+
+      const codeStr = ((wo && (wo.woNo || wo.wo_code)) || currentActiveWO || "").trim().toUpperCase();
+
+      // 1. Explicit PM indicators
+      if (typeStr.includes("PM") || codeStr.startsWith("PM")) {
+        return true;
+      }
+
+      // 2. Explicit Non-PM (BM / CM / Breakdown / Corrective)
+      if (
+        typeStr.includes("BM") || 
+        typeStr.includes("CM") || 
+        typeStr.includes("BREAKDOWN") || 
+        typeStr.includes("CORRECTIVE") || 
+        codeStr.startsWith("BM") || 
+        codeStr.startsWith("CM")
+      ) {
+        return false;
+      }
+
+      // 3. Check workType text
+      const workTypeStr = ((wo && wo.workType) || (targetWO && targetWO.workType) || "").toUpperCase();
+      if (workTypeStr.includes("PM") || workTypeStr.includes("PREVENTIVE") || workTypeStr.includes("บำรุงรักษา")) {
+        return true;
+      }
+
+      return false;
+    }
+
+    /**
      * Render Top Header Info of WO Detail
      */
     function renderDrawerHeader(data) {
@@ -1320,15 +1359,7 @@
       const asset = data.assetInfo || {};
 
       const targetWO = groupedWorkOrders.find(w => w.woNo === (wo.woNo || wo.wo_code || currentActiveWO));
-      const isPM = (
-        (wo.woType || "").toUpperCase().includes("PM") ||
-        (wo.request_type || "").toUpperCase().includes("PM") ||
-        (wo.wo_type || "").toUpperCase().includes("PM") ||
-        (wo.workType || "").toUpperCase().includes("PM") ||
-        (targetWO && (targetWO.woType || "").toUpperCase().includes("PM")) ||
-        (currentActiveWO || "").toUpperCase().includes("PM") ||
-        (data.components && data.components.length > 0)
-      );
+      const isPM = isPMWorkOrder(wo, data);
 
       const isDone = (wo.status || (targetWO && targetWO.status) || "").toLowerCase().includes("done") || 
                      (wo.status || "").toLowerCase().includes("comp") || 
@@ -1392,15 +1423,7 @@
       const wo = data.wo || {};
       const targetWO = groupedWorkOrders.find(w => w.woNo === (wo.woNo || wo.wo_code || currentActiveWO));
 
-      const isPM = (
-        (wo.woType || "").toUpperCase().includes("PM") ||
-        (wo.request_type || "").toUpperCase().includes("PM") ||
-        (wo.wo_type || "").toUpperCase().includes("PM") ||
-        (wo.workType || "").toUpperCase().includes("PM") ||
-        (targetWO && (targetWO.woType || "").toUpperCase().includes("PM")) ||
-        (currentActiveWO || "").toUpperCase().includes("PM") ||
-        (data.components && data.components.length > 0)
-      );
+      const isPM = isPMWorkOrder(wo, data);
 
       if (isPM) {
         // ================= PM: ACCORDION VIEW =================
@@ -2070,15 +2093,7 @@
       try {
         const wo = (currentDrawerData && currentDrawerData.wo) || {};
         const targetWO = groupedWorkOrders.find(w => w.woNo === currentActiveWO);
-        const isPM = (
-          (wo.woType || "").toUpperCase().includes("PM") ||
-          (wo.request_type || "").toUpperCase().includes("PM") ||
-          (wo.wo_type || "").toUpperCase().includes("PM") ||
-          (wo.workType || "").toUpperCase().includes("PM") ||
-          (targetWO && (targetWO.woType || "").toUpperCase().includes("PM")) ||
-          (currentActiveWO || "").toUpperCase().includes("PM") ||
-          (currentDrawerData && currentDrawerData.components && currentDrawerData.components.length > 0)
-        );
+        const isPM = isPMWorkOrder(wo, currentDrawerData);
         const technicianNote = document.getElementById("modalTechnicianNote")?.value || "";
 
         let closingData = {
