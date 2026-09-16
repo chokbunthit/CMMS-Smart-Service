@@ -1128,8 +1128,20 @@
       let html = "";
       filtered.forEach(wo => {
         const isPM = (wo.woType || "").toUpperCase().includes("PM");
-        const typeTagClass = isPM ? "tag-pm" : "tag-cm";
-        const typeLabel = isPM ? "PM (Preventive)" : "CM (Breakdown)";
+		const woType = (wo.woType || "").toUpperCase();
+        let typeTagClass = "tag-cm";
+        let typeLabel = "CM (Corrective)"; // หรือคำอธิบายที่ต้องการ
+
+        if (woType.includes("PM")) {
+          typeTagClass = "tag-pm";
+          typeLabel = "PM (Preventive)";
+        } else if (woType.includes("BM")) {
+          typeTagClass = "tag-bm";
+          typeLabel = "BM (Breakdown)";
+        } else if (woType.includes("CM")) {
+          typeTagClass = "tag-cm";
+          typeLabel = "CM (Corrective)";
+        }
 
         let priorityClass = "priority-medium";
         let priorityBadge = `<span class="badge" style="background: #eff6ff; color: #1d4ed8;">ปกติ</span>`;
