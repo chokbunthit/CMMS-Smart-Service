@@ -180,22 +180,31 @@
     }
 
     .tag-pm {
-      background: #ecfeff;
-      color: #0e7490;
-      border: 1px solid #a5f3fc;
-    }
-	
-	.tag-bm {
-      background: #fef2f2;
-      color: #b91c1c;
-      border: 1px solid #fecaca;
-    }
+  background: #ecfeff;
+  color: #0e7490;          /* คงโทนสีฟ้าเข้มไว้ แต่ถ้าต้องการให้อ่อนลงไม่เด่นเกินไป สามารถปรับเป็น #155e75 หรือ #0891b2 ได้ครับ */
+  border: 1px solid #cffafe; /* ปรับขอบให้อ่อนลงเล็กน้อยจาก a5f3fc เพื่อความกลมกลืน */
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
 
-    .tag-cm {
-      background: #FBFEF2;
-      color: #ebe1e1;
-      border: 1px solid #fecaca;
-    }
+.tag-bm {
+  background: #fef2f2;
+  color: #b91c1c;          /* คงโทนสีแดงเข้มไว้ หรือปรับเป็น #dc2626 / #991b1b ตามความเหมาะสม */
+  border: 1px solid #fee2e2; /* ปรับขอบให้อ่อนลงเล็กน้อยจาก fecaca */
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+   .tag-cm {
+	  background: #FBFEF2;
+	  color: #78716c;          /* ใช้สีเทาอมน้ำตาล (Warm Gray) ให้กลมกลืนกับพื้นหลังและไม่เด่นเกินไป */
+	  border: 1px solid #e7e5e4; /* ปรับสีขอบให้อ่อนลง ละมุนขึ้น ไม่ตัดขอบแข็งจนเกินไป */
+	  padding: 4px 8px;        /* เพิ่มระยะขอบด้านในนิดหน่อยให้ดูเป็นป้าย Tag มากขึ้น */
+	  border-radius: 4px;      /* มุมโค้งมนเล็กน้อย ดูทันสมัยขึ้น */
+	  font-size: 0.875rem;     /* ขนาดตัวหนังสือย่อยกำลังดี (ประมาณ 14px) */
+	}
 
     .wo-subtasks-preview {
       background: #f8fafc;
