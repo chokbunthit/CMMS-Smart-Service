@@ -1025,13 +1025,14 @@
 
       if (q) {
         filtered = filtered.filter(item => {
-          const wo = String(item.workorderCode || item.woNo || '').toLowerCase();
-          const req = String(item.requestCode || '').toLowerCase();
-          const asset = String(item.assetCode || '').toLowerCase();
-          const mName = String(item.machineName || '').toLowerCase();
-          const assignee = String(item.assignee || '').toLowerCase();
-          const action = String(item.actionTaken || '').toLowerCase();
-          return wo.includes(q) || req.includes(q) || asset.includes(q) || mName.includes(q) || assignee.includes(q) || action.includes(q);
+          const wo = String(item.workorderCode || item.woNo || item.workorder_code || item.wo_code || '').toLowerCase();
+          const req = String(item.requestCode || item.request_code || '').toLowerCase();
+          const asset = String(item.assetCode || item.asset_code || '').toLowerCase();
+          const mName = String(item.machineName || item.machine_name || item.asset_name || '').toLowerCase();
+          const assignee = String(item.assignee || item.assignee_name || '').toLowerCase();
+          const action = String(item.actionTaken || item.action_taken || '').toLowerCase();
+          const cause = String(item.rootCause || item.root_cause || '').toLowerCase();
+          return wo.includes(q) || req.includes(q) || asset.includes(q) || mName.includes(q) || assignee.includes(q) || action.includes(q) || cause.includes(q);
         });
       }
 
@@ -1046,19 +1047,32 @@
       window._pendingApprovalsData = filtered;
 
       container.innerHTML = filtered.map((item, idx) => {
-        const woCode = escapeHtml(item.workorderCode || item.woNo || '-');
-        const reqCode = escapeHtml(item.requestCode || '-');
-        const assetCode = escapeHtml(item.assetCode || '-');
-        const machineName = escapeHtml(item.machineName || '-');
-        const assignee = escapeHtml(item.assignee || '-');
-        const rootCause = escapeHtml(item.rootCause || '-');
-        const actionTaken = escapeHtml(item.actionTaken || '-');
-        const completedAt = escapeHtml(item.completedAt || '-');
-        const workTime = item.workingTime ? `${item.workingTime} นาที` : '-';
-        const downTime = item.downTime ? `${item.downTime} นาที` : '-';
+        const woCode = escapeHtml(item.workorderCode || item.woNo || item.workorder_code || item.wo_code || item.id || '-');
+        const reqCode = escapeHtml(item.requestCode || item.request_code || '-');
+        const assetCode = escapeHtml(item.assetCode || item.asset_code || '-');
+        const machineName = escapeHtml(item.machineName || item.machine_name || item.asset_name || item.assetCode || item.asset_code || '-');
+        const assignee = escapeHtml(item.assignee || item.assignee_name || '-');
+        const rootCause = escapeHtml(item.rootCause || item.root_cause || '-');
+        const actionTaken = escapeHtml(item.actionTaken || item.action_taken || '-');
 
-        const hasBeforeImg = item.imageBefore && item.imageBefore.length > 5;
-        const hasResultImg = item.imageResult && item.imageResult.length > 5;
+        let completedAt = item.completedAt || item.completed_at || item.tech_completed_at || item.end_date || item.updated_at || '-';
+        if (completedAt && completedAt !== '-' && String(completedAt).includes('T')) {
+          try {
+            completedAt = new Date(completedAt).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+          } catch {}
+        }
+        completedAt = escapeHtml(String(completedAt));
+
+        const rawWorkTime = item.workingTime ?? item.working_time ?? item.total_working_time;
+        const workTime = (rawWorkTime !== null && rawWorkTime !== undefined && rawWorkTime !== '') ? `${escapeHtml(String(rawWorkTime))} นาที` : '-';
+
+        const rawDownTime = item.downTime ?? item.down_time ?? item.total_down_time;
+        const downTime = (rawDownTime !== null && rawDownTime !== undefined && rawDownTime !== '') ? `${escapeHtml(String(rawDownTime))} นาที` : '-';
+
+        const beforeImg = item.imageBefore || item.image_before || item.photoBefore || item.photo_before || '';
+        const resultImg = item.imageResult || item.image_result || item.photoAfter || item.photo_after || '';
+        const hasBeforeImg = beforeImg && beforeImg.length > 5;
+        const hasResultImg = resultImg && resultImg.length > 5;
 
         return `
           <div class="pending-card" style="border-left: 4px solid #f59e0b;">
@@ -1105,13 +1119,13 @@
                 ${hasBeforeImg ? `
                   <div style="flex: 1;">
                     <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">ภาพก่อนซ่อม</span>
-                    <img src="${escapeHtml(item.imageBefore)}" alt="Before" style="width: 100%; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer;" onclick="openImagePreview('${escapeHtml(item.imageBefore)}')" />
+                    <img src="${escapeHtml(beforeImg)}" alt="Before" style="width: 100%; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer;" onclick="openImagePreview('${escapeHtml(beforeImg)}')" />
                   </div>
                 ` : ''}
                 ${hasResultImg ? `
                   <div style="flex: 1;">
                     <span style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 2px;">ภาพหลังซ่อม</span>
-                    <img src="${escapeHtml(item.imageResult)}" alt="Result" style="width: 100%; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer;" onclick="openImagePreview('${escapeHtml(item.imageResult)}')" />
+                    <img src="${escapeHtml(resultImg)}" alt="Result" style="width: 100%; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer;" onclick="openImagePreview('${escapeHtml(resultImg)}')" />
                   </div>
                 ` : ''}
               </div>
@@ -1139,12 +1153,19 @@
       if (!item) return;
       activeApprovalWo = item;
 
-      const woCode = item.workorderCode || item.woNo || '-';
-      document.getElementById('modalApproveWoLabel').innerText = `ใบสั่งงาน: ${woCode} (คำขอ: ${item.requestCode || '-'})`;
-      document.getElementById('approveModalAsset').innerText = `${item.machineName || '-'} (${item.assetCode || '-'})`;
-      document.getElementById('approveModalAssignee').innerText = item.assignee || '-';
-      document.getElementById('approveModalRootCause').innerText = item.rootCause || '-';
-      document.getElementById('approveModalActionTaken').innerText = item.actionTaken || '-';
+      const woCode = item.workorderCode || item.woNo || item.workorder_code || item.wo_code || '-';
+      const reqCode = item.requestCode || item.request_code || '-';
+      const assetCode = item.assetCode || item.asset_code || '-';
+      const machineName = item.machineName || item.machine_name || item.asset_name || assetCode;
+      const assignee = item.assignee || item.assignee_name || '-';
+      const rootCause = item.rootCause || item.root_cause || '-';
+      const actionTaken = item.actionTaken || item.action_taken || '-';
+
+      document.getElementById('modalApproveWoLabel').innerText = `ใบสั่งงาน: ${woCode} (คำขอ: ${reqCode})`;
+      document.getElementById('approveModalAsset').innerText = `${machineName} (${assetCode})`;
+      document.getElementById('approveModalAssignee').innerText = assignee;
+      document.getElementById('approveModalRootCause').innerText = rootCause;
+      document.getElementById('approveModalActionTaken').innerText = actionTaken;
       document.getElementById('approveModalNotes').value = '';
 
       document.getElementById('approveModal').style.display = 'flex';
@@ -1158,7 +1179,8 @@
     async function submitModalApproval() {
       if (!activeApprovalWo) return;
 
-      const woNo = activeApprovalWo.workorderCode || activeApprovalWo.woNo;
+      const woNo = activeApprovalWo.workorderCode || activeApprovalWo.woNo || activeApprovalWo.workorder_code || activeApprovalWo.wo_code;
+      const requestCode = activeApprovalWo.requestCode || activeApprovalWo.request_code || '';
       const notes = document.getElementById('approveModalNotes').value.trim();
       const approvedBy = (currentManager && (currentManager.displayName || currentManager.name || currentManager.userName)) || 'Manager Lead';
 
@@ -1170,7 +1192,7 @@
         const payload = {
           woNo: woNo,
           workorderCode: woNo,
-          requestCode: activeApprovalWo.requestCode || '',
+          requestCode: requestCode,
           approvedBy: approvedBy,
           notes: notes
         };

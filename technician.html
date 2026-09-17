@@ -180,31 +180,16 @@
     }
 
     .tag-pm {
-  background: #ecfeff;
-  color: #0e7490;          /* คงโทนสีฟ้าเข้มไว้ แต่ถ้าต้องการให้อ่อนลงไม่เด่นเกินไป สามารถปรับเป็น #155e75 หรือ #0891b2 ได้ครับ */
-  border: 1px solid #cffafe; /* ปรับขอบให้อ่อนลงเล็กน้อยจาก a5f3fc เพื่อความกลมกลืน */
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-}
+      background: #ecfeff;
+      color: #0e7490;
+      border: 1px solid #a5f3fc;
+    }
 
-.tag-bm {
-  background: #fef2f2;
-  color: #b91c1c;          /* คงโทนสีแดงเข้มไว้ หรือปรับเป็น #dc2626 / #991b1b ตามความเหมาะสม */
-  border: 1px solid #fee2e2; /* ปรับขอบให้อ่อนลงเล็กน้อยจาก fecaca */
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-}
-
-   .tag-cm {
-	  background: #FBFEF2;
-	  color: #78716c;          /* ใช้สีเทาอมน้ำตาล (Warm Gray) ให้กลมกลืนกับพื้นหลังและไม่เด่นเกินไป */
-	  border: 1px solid #e7e5e4; /* ปรับสีขอบให้อ่อนลง ละมุนขึ้น ไม่ตัดขอบแข็งจนเกินไป */
-	  padding: 4px 8px;        /* เพิ่มระยะขอบด้านในนิดหน่อยให้ดูเป็นป้าย Tag มากขึ้น */
-	  border-radius: 4px;      /* มุมโค้งมนเล็กน้อย ดูทันสมัยขึ้น */
-	  font-size: 0.75rem;     /* ขนาดตัวหนังสือย่อยกำลังดี (ประมาณ 14px) */
-	}
+    .tag-cm {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
 
     .wo-subtasks-preview {
       background: #f8fafc;
@@ -661,7 +646,9 @@
     <!-- Top Header -->
     <header class="app-header">
       <div class="header-brand">
-        <button id="navBackBtn" style="display: none; border: none; background: none; font-size: 16px; color: var(--text-main); margin-right: 6px; cursor: pointer;" onclick="goBackToList()">
+        <button id="navBackBtn"
+          style="display: none; border: none; background: none; font-size: 16px; color: var(--text-main); margin-right: 6px; cursor: pointer;"
+          onclick="goBackToList()">
           <i class="fa-solid fa-arrow-left"></i>
         </button>
         <div class="header-logo" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
@@ -691,9 +678,11 @@
       <section id="taskListView">
 
         <!-- Technician Info Banner -->
-        <div class="profile-card" style="background: linear-gradient(135deg, #0f172a 0%, #0369a1 50%, #0284c7 100%); padding: 14px 16px; margin-bottom: 12px;">
+        <div class="profile-card"
+          style="background: linear-gradient(135deg, #0f172a 0%, #0369a1 50%, #0284c7 100%); padding: 14px 16px; margin-bottom: 12px;">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <img id="techAvatar" src="https://ui-avatars.com/api/?name=MT&background=0284c7&color=fff" alt="Avatar" class="profile-avatar" style="width: 44px; height: 44px;" />
+            <img id="techAvatar" src="https://ui-avatars.com/api/?name=MT&background=0284c7&color=fff" alt="Avatar"
+              class="profile-avatar" style="width: 44px; height: 44px;" />
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; gap: 6px;">
                 <span class="tech-header-badge" style="background: rgba(255,255,255,0.2); color: white;">
@@ -701,12 +690,14 @@
                 </span>
                 <span style="font-size: 11px; opacity: 0.85;">ช่างซ่อมบำรุง</span>
               </div>
-              <div id="techName" style="font-size: 15px; font-weight: 700; color: white; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <div id="techName"
+                style="font-size: 15px; font-weight: 700; color: white; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 กำลังโหลด...
               </div>
             </div>
             <div style="text-align: right;">
-              <div id="activeTaskCount" style="font-size: 20px; font-weight: 800; color: #38bdf8; line-height: 1;">0</div>
+              <div id="activeTaskCount" style="font-size: 20px; font-weight: 800; color: #38bdf8; line-height: 1;">0
+              </div>
               <div style="font-size: 10px; opacity: 0.85; margin-top: 2px;">ใบงานค้าง</div>
             </div>
           </div>
@@ -718,11 +709,13 @@
             <span style="font-size: 10.5px; color: var(--text-muted);">ทั้งหมด</span>
             <span id="statAllCount" style="font-size: 16px; font-weight: 700; color: var(--text-main);">0</span>
           </div>
-          <div class="stat-box" style="padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 2px; border-color: #bfdbfe;">
+          <div class="stat-box"
+            style="padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 2px; border-color: #bfdbfe;">
             <span style="font-size: 10.5px; color: #1d4ed8;">กำลังดำเนินการ</span>
             <span id="statProgressCount" style="font-size: 16px; font-weight: 700; color: #1d4ed8;">0</span>
           </div>
-          <div class="stat-box" style="padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 2px; border-color: #bbf7d0;">
+          <div class="stat-box"
+            style="padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 2px; border-color: #bbf7d0;">
             <span style="font-size: 10.5px; color: #15803d;">เสร็จสิ้นแล้ว</span>
             <span id="statDoneCount" style="font-size: 16px; font-weight: 700; color: #15803d;">0</span>
           </div>
@@ -731,7 +724,8 @@
         <!-- Search Bar -->
         <div class="search-box-tech">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="searchInput" placeholder="ค้นหา WO No, รหัสเครื่องจักร, สถานที่..." oninput="handleSearchFilter()" />
+          <input type="text" id="searchInput" placeholder="ค้นหา WO No, รหัสเครื่องจักร, สถานที่..."
+            oninput="handleSearchFilter()" />
         </div>
 
         <!-- Filter Pills Tabs -->
@@ -809,7 +803,8 @@
          STICKY BOTTOM BAR (For State 2: Closing Action)
     ========================================================== -->
     <div id="stickyActionBar" class="sticky-action-bar" style="display: none;">
-      <button type="button" class="header-icon-btn" onclick="goBackToList()" style="width: 44px; height: 44px;" title="ย้อนกลับ">
+      <button type="button" class="header-icon-btn" onclick="goBackToList()" style="width: 44px; height: 44px;"
+        title="ย้อนกลับ">
         <i class="fa-solid fa-arrow-left"></i>
       </button>
       <button type="button" class="btn-close-wo" id="btnCloseWorkOrder" onclick="openCloseModal()">
@@ -824,30 +819,36 @@
     <div id="closeWOModal" class="modal-sheet">
       <div class="modal-sheet-content">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-          <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+          <h3
+            style="font-size: 15px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
             <i class="fa-solid fa-clipboard-check" style="color: #16a34a;"></i>
             ยืนยันการปิดใบงาน
           </h3>
-          <button onclick="closeCloseModal()" style="border: none; background: none; font-size: 16px; color: var(--text-sub); cursor: pointer;">
+          <button onclick="closeCloseModal()"
+            style="border: none; background: none; font-size: 16px; color: var(--text-sub); cursor: pointer;">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
 
         <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
-          คุณกำลังจะส่งมอบงาน <strong id="modalWoNoText" style="color: var(--primary);">-</strong> เพื่อให้หัวหน้าช่างตรวจสอบและอนุมัติ (<strong>Pending Approval</strong>)
+          คุณกำลังจะส่งมอบงาน <strong id="modalWoNoText" style="color: var(--primary);">-</strong>
+          เพื่อให้หัวหน้าช่างตรวจสอบและอนุมัติ (<strong>Pending Approval</strong>)
         </p>
 
         <form id="finalCloseForm" onsubmit="handleFinalCloseSubmit(event)">
           <div class="form-group">
             <label class="form-label">หมายเหตุการส่งมอบ / ข้อเสนอแนะช่าง</label>
-            <textarea id="modalTechnicianNote" class="form-textarea" placeholder="ระบุข้อความสรุปการส่งมอบเครื่องจักรคืนฝ่ายผลิต..." style="min-height: 70px;"></textarea>
+            <textarea id="modalTechnicianNote" class="form-textarea"
+              placeholder="ระบุข้อความสรุปการส่งมอบเครื่องจักรคืนฝ่ายผลิต..." style="min-height: 70px;"></textarea>
           </div>
 
           <div style="display: flex; gap: 10px; margin-top: 16px;">
-            <button type="button" onclick="closeCloseModal()" class="form-input" style="flex: 1; text-align: center; cursor: pointer; background: #f1f5f9; font-weight: 600;">
+            <button type="button" onclick="closeCloseModal()" class="form-input"
+              style="flex: 1; text-align: center; cursor: pointer; background: #f1f5f9; font-weight: 600;">
               ยกเลิก
             </button>
-            <button type="submit" class="btn-primary" style="flex: 2; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);">
+            <button type="submit" class="btn-primary"
+              style="flex: 2; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);">
               <i class="fa-solid fa-paper-plane"></i> ส่งตรวจงาน (Submit)
             </button>
           </div>
@@ -1142,8 +1143,8 @@
 
       let html = "";
       filtered.forEach(wo => {
-        const isPM = (wo.woType || "").toUpperCase().includes("PM");
-		const woType = (wo.woType || "").toUpperCase();
+        const woType = (wo.woType || "").toUpperCase();
+
         let typeTagClass = "tag-cm";
         let typeLabel = "CM (Corrective)"; // หรือคำอธิบายที่ต้องการ
 
@@ -1173,7 +1174,7 @@
         }
 
         const isDone = (wo.status || "").toLowerCase().includes("done") || (wo.status || "").toLowerCase().includes("comp");
-        const statusBadge = isDone 
+        const statusBadge = isDone
           ? `<span class="badge badge-completed"><i class="fa-solid fa-check"></i> เสร็จสิ้น</span>`
           : `<span class="badge badge-progress"><i class="fa-solid fa-clock"></i> กำลังทำ</span>`;
 
@@ -1188,8 +1189,8 @@
                 <span style="font-size: 10px; color: #64748b; font-weight: normal;">แตะจุดที่ต้องการเปิด</span>
               </div>
               ${previewList.map((st, sIdx) => {
-                const targetIdent = st.equipment_code || st.equipment || st.task_no || "";
-                return `
+            const targetIdent = st.equipment_code || st.equipment || st.task_no || "";
+            return `
                 <div class="wo-subtask-item" onclick="openWorkOrderDetail('${wo.woNo}', '${encodeURIComponent(targetIdent)}')" title="แตะเพื่อเปิดกรอกข้อมูลจุดนี้โดยตรง">
                   <i class="fa-regular fa-circle-dot" style="font-size: 8px; color: var(--primary);"></i>
                   <span style="font-weight: 600; color: #1e293b;">${escapeHtml(st.equipment)}</span>
@@ -1197,7 +1198,7 @@
                   <i class="fa-solid fa-arrow-right" style="font-size: 9px; color: #94a3b8; margin-left: auto;"></i>
                 </div>
               `;
-              }).join("")}
+          }).join("")}
               ${wo.subtasks.length > 2 ? `
                 <div onclick="openWorkOrderDetail('${wo.woNo}', 'ALL')" style="font-size: 11px; color: var(--primary); font-weight: 700; margin-top: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px;" title="เปิดดูจุดตรวจเช็คทั้งหมด">
                   <span>+ ดูเพิ่มอีก ${wo.subtasks.length - 2} รายการ (เปิดดูทั้งหมด)</span>
@@ -1357,11 +1358,11 @@
 
       // 2. Explicit Non-PM (BM / CM / Breakdown / Corrective)
       if (
-        typeStr.includes("BM") || 
-        typeStr.includes("CM") || 
-        typeStr.includes("BREAKDOWN") || 
-        typeStr.includes("CORRECTIVE") || 
-        codeStr.startsWith("BM") || 
+        typeStr.includes("BM") ||
+        typeStr.includes("CM") ||
+        typeStr.includes("BREAKDOWN") ||
+        typeStr.includes("CORRECTIVE") ||
+        codeStr.startsWith("BM") ||
         codeStr.startsWith("CM")
       ) {
         return false;
@@ -1388,9 +1389,9 @@
       const targetWO = groupedWorkOrders.find(w => w.woNo === (wo.woNo || wo.wo_code || currentActiveWO));
       const isPM = isPMWorkOrder(wo, data);
 
-      const isDone = (wo.status || (targetWO && targetWO.status) || "").toLowerCase().includes("done") || 
-                     (wo.status || "").toLowerCase().includes("comp") || 
-                     (wo.status || "").toLowerCase().includes("เสร็จ");
+      const isDone = (wo.status || (targetWO && targetWO.status) || "").toLowerCase().includes("done") ||
+        (wo.status || "").toLowerCase().includes("comp") ||
+        (wo.status || "").toLowerCase().includes("เสร็จ");
 
       const woCode = wo.woNo || wo.wo_code || currentActiveWO || "-";
       const reqCode = req.reqNo || req.request_code || wo.request_code || wo.reqNo || (targetWO && targetWO.reqNo) || "-";
@@ -1511,7 +1512,7 @@
                     ${escapeHtml(comp.equipment_code || comp.component_code || '')}
                   </span>
                   <span class="acc-comp-name">
-                    ${escapeHtml(comp.equipment_name || comp.component_name || comp.equipment || `อุปกรณ์ชิ้นที่ ${idx+1}`)}
+                    ${escapeHtml(comp.equipment_name || comp.component_name || comp.equipment || `อุปกรณ์ชิ้นที่ ${idx + 1}`)}
                   </span>
                   ${comp.task_no ? `<span class="badge-task-no">${escapeHtml(comp.task_no)}</span>` : ""}
                   ${comp.pm_type ? `<span class="badge-pm-type">${escapeHtml(comp.pm_type)}</span>` : ""}
@@ -1635,14 +1636,29 @@
       } else {
         // ================= CM / BREAKDOWN: UNIFIED CLOSING FORM =================
         const closing = data.closingForm || {};
+        const req = data.request || {};
+        const targetWO = groupedWorkOrders.find(w => w.woNo === (wo.woNo || wo.wo_code || currentActiveWO));
+        const isBM = (wo.woType || "").toUpperCase().includes("BM") ||
+                     (targetWO && (targetWO.woType || "").toUpperCase().includes("BM")) ||
+                     (currentActiveWO || "").toUpperCase().startsWith("BM");
+
+        const now = new Date();
+        const defaultDate = closing.endDate ? closing.endDate.split("T")[0] : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        let defaultTime = "00:00";
+        if (closing.endDate && closing.endDate.includes("T")) {
+          defaultTime = closing.endDate.split("T")[1].substring(0, 5);
+        } else {
+          defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        }
+
         container.innerHTML = `
           <div class="card" style="margin-top: 14px;">
             <div class="card-header">
               <span class="card-title">
                 <i class="fa-solid fa-wrench" style="color: #ef4444;"></i>
-                บันทึกการซ่อมแซม (Breakdown Report)
+                บันทึกการซ่อมแซม (${isBM ? 'Breakdown Maintenance Report' : 'Corrective Maintenance Report'})
               </span>
-              <span style="font-size: 10.5px; color: var(--text-muted);">CM Form</span>
+              <span class="badge ${isBM ? 'tag-bm' : 'tag-cm'}" style="font-size: 10.5px;">${isBM ? 'BM Form' : 'CM Form'}</span>
             </div>
 
             <div class="form-group">
@@ -1655,14 +1671,48 @@
               <textarea id="cmActionTaken" class="form-textarea" placeholder="ระบุขั้นตอนการแก้ไข เช่น เปลี่ยนอะไหล่, ปรับเทียบระบบ...">${closing.actionTaken || ''}</textarea>
             </div>
 
+            <!-- Repair Finished Date & Time (แยกวันที่ และเวลา 24 ชม.) -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label class="form-label" style="margin-bottom: 0; font-weight: 700; color: #1e293b; font-size: 12px;">
+                  <i class="fa-solid fa-clock" style="color: #0284c7; margin-right: 5px;"></i>วันที่และเวลาซ่อมเสร็จ (24 ชม.)
+                </label>
+                <span class="badge ${isBM ? 'tag-bm' : 'tag-cm'}" style="font-size: 10px; padding: 2px 8px;">
+                  ${isBM ? 'BM คำนวณ Downtime อัตโนมัติ' : 'เวลาซ่อมเสร็จสิ้น'}
+                </span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px;">
+                <div>
+                  <label style="font-size: 11px; color: #64748b; margin-bottom: 3px; display: block; font-weight: 600;">
+                    <i class="fa-regular fa-calendar" style="margin-right: 3px;"></i>วันที่ซ่อมเสร็จ
+                  </label>
+                  <input type="date" id="cmRepairDate" class="form-input" value="${defaultDate}" onchange="recalcDowntimeAuto()" oninput="recalcDowntimeAuto()" />
+                </div>
+                <div>
+                  <label style="font-size: 11px; color: #64748b; margin-bottom: 3px; display: block; font-weight: 600;">
+                    <i class="fa-regular fa-clock" style="margin-right: 3px;"></i>เวลาซ่อมเสร็จ (24:00)
+                  </label>
+                  <input type="time" id="cmRepairTime" class="form-input" value="${defaultTime}" onchange="recalcDowntimeAuto()" oninput="recalcDowntimeAuto()" />
+                </div>
+              </div>
+
+              <!-- Calculation info summary box -->
+              <div id="cmDowntimeCalcInfo" style="margin-top: 8px; font-size: 11.5px; line-height: 1.4; color: #0369a1; background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 6px; padding: 6px 10px;">
+              </div>
+            </div>
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
               <div class="form-group">
                 <label class="form-label">เวลาที่ใช้ซ่อม (Work Time นาที)</label>
                 <input type="number" id="cmWorkTime" class="form-input" placeholder="นาที" value="${closing.workTimeMinutes || 30}" />
               </div>
               <div class="form-group">
-                <label class="form-label">เครื่องหยุดทำงาน (Downtime นาที)</label>
-                <input type="number" id="cmDowntime" class="form-input" placeholder="นาที" value="${closing.downtimeMinutes || 45}" />
+                <label class="form-label">
+                  เครื่องหยุดทำงาน (Downtime นาที)
+                  <span style="font-size: 10px; color: #d97706; font-weight: normal;">(Auto คำนวณ)</span>
+                </label>
+                <input type="number" id="cmDowntime" class="form-input" placeholder="นาที" value="${closing.downtimeMinutes || 0}" />
               </div>
             </div>
 
@@ -1720,6 +1770,83 @@
               </div>
             </div>
 
+          </div>
+        `;
+
+        // คำนวณ Downtime เริ่มต้นทันทีหลังแสดงฟอร์ม
+        setTimeout(() => {
+          recalcDowntimeAuto();
+        }, 50);
+      }
+    }
+
+    /**
+     * =========================================================
+     * DOWNTIME AUTO-CALCULATION HELPER
+     * =========================================================
+     */
+    function recalcDowntimeAuto() {
+      const data = currentDrawerData || {};
+      const req = data.request || {};
+      const wo = data.wo || {};
+      const closing = data.closingForm || {};
+
+      // 1. หาเวลาจุดเริ่มต้นแจ้งซ่อม (Start of Downtime)
+      // ลำดับความสำคัญ: req.created_at -> closing.requestCreatedAt -> wo.created_at -> req.request_date
+      let startRaw = req.created_at || closing.requestCreatedAt || wo.created_at;
+      if (!startRaw && req.request_date) {
+        startRaw = `${req.request_date}T08:00:00`;
+      }
+
+      const dateVal = document.getElementById("cmRepairDate")?.value;
+      const timeVal = document.getElementById("cmRepairTime")?.value;
+      const downtimeInput = document.getElementById("cmDowntime");
+      const infoEl = document.getElementById("cmDowntimeCalcInfo");
+
+      if (!dateVal || !timeVal || !startRaw) {
+        if (infoEl) infoEl.style.display = "none";
+        return;
+      }
+
+      const startDate = new Date(startRaw);
+      const endDate = new Date(`${dateVal}T${timeVal}:00`);
+
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        if (infoEl) infoEl.style.display = "none";
+        return;
+      }
+
+      const diffMs = endDate.getTime() - startDate.getTime();
+      const diffMinutes = Math.max(0, Math.round(diffMs / (1000 * 60)));
+
+      if (downtimeInput) {
+        downtimeInput.value = diffMinutes;
+      }
+
+      const hours = Math.floor(diffMinutes / 60);
+      const mins = diffMinutes % 60;
+      const timeText = hours > 0 ? `${hours} ชม. ${mins} นาที` : `${mins} นาที`;
+
+      if (infoEl) {
+        infoEl.style.display = "block";
+        const startFormatted = startDate.toLocaleString("th-TH", {
+          year: "numeric", month: "short", day: "numeric",
+          hour: "2-digit", minute: "2-digit", hour12: false
+        });
+        const endFormatted = endDate.toLocaleString("th-TH", {
+          year: "numeric", month: "short", day: "numeric",
+          hour: "2-digit", minute: "2-digit", hour12: false
+        });
+
+        infoEl.innerHTML = `
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <i class="fa-solid fa-calculator" style="margin-right: 4px;"></i>
+              <strong>คำนวณ Downtime อัตโนมัติ:</strong> <span style="font-weight: 800; color: #0284c7; font-size: 12.5px;">${diffMinutes.toLocaleString()} นาที</span> (~${timeText})
+            </div>
+          </div>
+          <div style="font-size: 10.5px; opacity: 0.9; margin-top: 3px;">
+            <i class="fa-regular fa-bell" style="margin-right: 3px;"></i>เวลาแจ้งซ่อม: <strong>${startFormatted}</strong> &rarr; เวลาซ่อมเสร็จ: <strong>${endFormatted}</strong>
           </div>
         `;
       }
@@ -2133,6 +2260,13 @@
         };
 
         if (!isPM) {
+          const repairDate = document.getElementById("cmRepairDate")?.value || "";
+          const repairTime = document.getElementById("cmRepairTime")?.value || "";
+          const finalEndDate = (repairDate && repairTime) ? `${repairDate}T${repairTime}:00` : new Date().toISOString();
+
+          closingData.repairDate = repairDate;
+          closingData.repairTime = repairTime;
+          closingData.endDate = finalEndDate;
           closingData.rootCause = document.getElementById("cmRootCause")?.value || "";
           closingData.actionTaken = document.getElementById("cmActionTaken")?.value || "";
           closingData.workTimeMinutes = document.getElementById("cmWorkTime")?.value || 30;
