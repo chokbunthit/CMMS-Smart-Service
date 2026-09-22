@@ -319,6 +319,12 @@
       const avatarEl = document.getElementById("userAvatar");
       const deptEl = document.getElementById("userDept");
 
+      if (!user.isLoggedIn || !user.userId) {
+        if (nameEl) nameEl.innerHTML = '<span style="font-size: 14px;">ผู้เยี่ยมชม (Guest)</span>';
+        if (deptEl) deptEl.innerHTML = '<a href="login.html" style="color: #bfdbfe; font-weight: 700; text-decoration: underline;"><i class="fa-solid fa-arrow-right-to-bracket"></i> แตะเพื่อเข้าสู่ระบบ</a>';
+        return;
+      }
+
       // ตรวจสอบข้อมูลจาก Sheet Users cache ถ้ามี
       let sheetProfile = {};
       if (user.userId) {

@@ -216,9 +216,9 @@ const LiffAuth = (function () {
       }
 
       // 5. กรณีเปิดใน External Browser ปกติ
-      // ตรวจสอบว่ามี cached session เดิมหรือไม่
+      // ตรวจสอบว่ามี cached session เดิมที่ยังล็อกอินอยู่หรือไม่
       const cached = getCachedUser();
-      if (cached) {
+      if (cached && cached.isLoggedIn && cached.userId) {
         currentUser = cached;
         hideLoading();
         if (typeof options.onReady === "function") {
@@ -252,7 +252,7 @@ const LiffAuth = (function () {
       console.error("LiffAuth.init Error:", err);
       // Fallback จาก LocalStorage หาก offline หรือมีปัญหา
       const cached = getCachedUser();
-      if (cached) {
+      if (cached && cached.isLoggedIn && cached.userId) {
         currentUser = cached;
         hideLoading();
         if (typeof options.onReady === "function") {
@@ -262,10 +262,15 @@ const LiffAuth = (function () {
       }
 
       hideLoading();
+      if (requiredAuth) {
+        window.location.href = "login.html";
+        return null;
+      }
+
       // สร้าง Guest User fallback
       currentUser = {
-        userId: "guest",
-        displayName: "Guest User",
+        userId: "",
+        displayName: "ผู้เยี่ยมชม (Guest)",
         pictureUrl: "",
         isLoggedIn: false,
         authSource: "fallback"
@@ -282,7 +287,11 @@ const LiffAuth = (function () {
    * ดึงข้อมูลผู้ใช้งานปัจจุบัน
    */
   function getUser() {
-    return currentUser || getCachedUser();
+    const u = currentUser || getCachedUser();
+    if (u && u.isLoggedIn && u.userId) {
+      return u;
+    }
+    return null;
   }
 
   /**
@@ -308,9 +317,11 @@ const LiffAuth = (function () {
   function logout() {
     saveUser(null);
     if (typeof liff !== "undefined" && liff.isLoggedIn && liff.isLoggedIn()) {
-      liff.logout();
+      try {
+        liff.logout();
+      } catch (e) {}
     }
-    location.reload();
+    window.location.href = "login.html";
   }
 
   /**

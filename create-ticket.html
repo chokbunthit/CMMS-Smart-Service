@@ -326,11 +326,19 @@
 
       try {
         activeUser = await LiffAuth.init({
-          requiredAuth: false,
+          requiredAuth: true,
           onReady: (user) => {
-            console.log("Ready with user:", user);
+            if (!user || !user.isLoggedIn || !user.userId) {
+              window.location.href = "login.html";
+              return;
+            }
           }
         });
+
+        if (!activeUser || !activeUser.isLoggedIn || !activeUser.userId) {
+          window.location.href = "login.html";
+          return;
+        }
 
         await loadMachineData();
         checkUrlParams();
@@ -524,7 +532,14 @@
         }
 
         const selectedType = document.querySelector('input[name="reqType"]:checked').value;
-        const user = LiffAuth.getUser() || {};
+        const user = LiffAuth.getUser();
+
+        if (!user || !user.isLoggedIn || !user.userId) {
+          LiffAuth.hideLoading();
+          alert("กรุณาเข้าสู่ระบบก่อนทำการแจ้งซ่อม");
+          window.location.href = "login.html";
+          return;
+        }
 
         let assetCodeVal = document.getElementById("reqAsset").value.trim();
         let compCodeVal = document.getElementById("reqComp").value.trim();
