@@ -656,8 +656,48 @@
       </div>
 
       <!-- Modal Body -->
-      <div class="modal-body">
-        
+        <!-- Machine & Component Review / Edit -->
+        <div style="margin-bottom: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <label style="font-size: 11.5px; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 5px;">
+              <i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> ตรวจสอบ / แก้ไขเครื่องจักรและชิ้นส่วน
+            </label>
+            <span style="font-size: 10px; color: var(--text-muted);">(แก้ไขได้หากผู้แจ้งระบุผิดหรือไม่ระบุ)</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+                Asset Code (รหัสเครื่อง) <span style="color: #dc2626;">*</span>
+              </label>
+              <input
+                type="text"
+                id="modalAssetCode"
+                list="modal-asset-list"
+                oninput="onModalAssetInput(this.value)"
+                placeholder="เช่น FA-CR001"
+                style="width: 100%; padding: 7px 10px; font-size: 12px; font-family: monospace; border: 1px solid var(--border-color); border-radius: var(--radius-sm); outline: none; background: #ffffff;"
+              />
+              <datalist id="modal-asset-list"></datalist>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+                Component Code (รหัสชิ้นส่วน)
+              </label>
+              <input
+                type="text"
+                id="modalComponentCode"
+                list="modal-component-list"
+                placeholder="เช่น FA-CR001-MT01"
+                style="width: 100%; padding: 7px 10px; font-size: 12px; font-family: monospace; border: 1px solid var(--border-color); border-radius: var(--radius-sm); outline: none; background: #ffffff;"
+              />
+              <datalist id="modal-component-list"></datalist>
+            </div>
+          </div>
+          <div id="modalAssetHelperText" style="font-size: 10.5px; color: var(--text-muted); margin-top: 5px;"></div>
+        </div>
+
         <!-- Work Order Type -->
         <div style="margin-bottom: 14px;">
           <label style="display: block; font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">ประเภทใบสั่งงาน (Work Order Type):</label>
@@ -743,6 +783,8 @@
   <script>
     let rawPendingTasks = [];
     let rawPendingApprovals = [];
+    let rawAssets = [];
+    let rawComponents = [];
     let currentPortalMode = 'DISPATCH'; // 'DISPATCH' | 'APPROVAL'
     let activeFilter = 'ALL';
     let currentAssigneeType = 'INTERNAL';
@@ -819,6 +861,7 @@
           }
 
           loadPendingTasks();
+          loadMachineMasterData();
         } else {
           const msg = (roleRes && roleRes.message) || 'ขออภัย คุณไม่มีสิทธิ์เข้าถึงหน้ารายการงานค้าง (เฉพาะตำแหน่ง Manager เท่านั้น)';
           showAccessDenied(msg);
@@ -1297,6 +1340,75 @@
     }
 
     /**
+     * Master Data for Modal (Assets & Components)
+     */
+    async function loadMachineMasterData() {
+      if (rawAssets.length > 0) return;
+      try {
+        const json = await CmmsApi.getMachines();
+        if (json && json.status === "success") {
+          rawAssets = json.data?.assets || [];
+          rawComponents = json.data?.components || [];
+          renderModalAssetDatalist();
+        }
+      } catch (err) {
+        console.warn("Could not load machine master data for modal:", err);
+      }
+    }
+
+    function renderModalAssetDatalist() {
+      const list = document.getElementById("modal-asset-list");
+      if (!list) return;
+      list.innerHTML = "";
+      rawAssets.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item.assetCode;
+        opt.label = item.machineName ? `${item.assetCode} - ${item.machineName}` : item.assetCode;
+        list.appendChild(opt);
+      });
+    }
+
+    function onModalAssetInput(val) {
+      if (!val) {
+        document.getElementById("modalAssetHelperText").innerHTML = "";
+        updateModalComponentDatalist("");
+        return;
+      }
+      val = val.trim();
+
+      // Check if user entered a component code directly
+      const compMatch = rawComponents.find(c => c.compCode && c.compCode.toUpperCase() === val.toUpperCase());
+      if (compMatch) {
+        document.getElementById("modalAssetCode").value = compMatch.assetCode;
+        document.getElementById("modalComponentCode").value = compMatch.compCode;
+        val = compMatch.assetCode;
+      }
+
+      updateModalComponentDatalist(val);
+
+      const matchedAsset = rawAssets.find(a => a.assetCode && a.assetCode.toUpperCase() === val.toUpperCase());
+      const helper = document.getElementById("modalAssetHelperText");
+      if (matchedAsset) {
+        helper.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #16a34a; margin-right: 4px;"></i><strong style="color: var(--text-main);">${escapeHtml(matchedAsset.machineName || '')}</strong> <span style="color: var(--text-muted);">(${escapeHtml(matchedAsset.location || matchedAsset.department || '')})</span>`;
+      } else {
+        helper.innerHTML = "";
+      }
+    }
+
+    function updateModalComponentDatalist(assetCode) {
+      const compList = document.getElementById("modal-component-list");
+      if (!compList) return;
+      compList.innerHTML = "";
+      const filtered = rawComponents.filter(c => !assetCode || c.assetCode === assetCode || (c.compCode && c.compCode.startsWith(assetCode)));
+      filtered.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item.compCode;
+        opt.label = item.compName ? `${item.compCode} - ${item.compName}` : item.compCode;
+        compList.appendChild(opt);
+      });
+    }
+
+    /**
      * 8. Assign Modal Handlers
      */
     async function openAssignModal(requestCode, reqType) {
@@ -1307,10 +1419,22 @@
       if (isBm) document.getElementById('radioWoBm').checked = true;
       else document.getElementById('radioWoCm').checked = true;
 
+      // ค้นหาข้อมูลคำขอจาก rawPendingTasks เพื่อดึง asset_code และ component_code เดิม
+      const reqItem = rawPendingTasks.find(t => (t.request_code || t.requestCode) === requestCode);
+      const curAsset = reqItem ? (reqItem.asset_code || reqItem.assetCode || '') : '';
+      const curComp = reqItem ? (reqItem.component_code || reqItem.componentCode || '') : '';
+
+      document.getElementById('modalAssetCode').value = curAsset;
+      document.getElementById('modalComponentCode').value = curComp;
+      document.getElementById('modalAssetHelperText').innerHTML = '';
+
       selectDueDay(1, document.querySelector('.due-day-btn'));
       document.getElementById('assignModal').style.display = 'flex';
 
       loadAssignees();
+      await loadMachineMasterData();
+      if (curAsset) onModalAssetInput(curAsset);
+      if (curComp) document.getElementById('modalComponentCode').value = curComp;
     }
 
     function closeAssignModal() {
@@ -1418,7 +1542,14 @@
       const assigneeIds = Array.from(checked).map(cb => cb.getAttribute('data-id') || '');
       const woType = document.querySelector('input[name="modalWoType"]:checked')?.value || 'CM';
       const dueDays = parseInt(document.getElementById('modalDueDaysVal').value || 1, 10);
+      const assetCode = (document.getElementById('modalAssetCode').value || '').trim();
+      const componentCode = (document.getElementById('modalComponentCode').value || '').trim();
       const btn = document.getElementById('btnConfirmAssign');
+
+      if (!assetCode) {
+        alert('กรุณาระบุ Asset Code (รหัสเครื่องจักร)');
+        return;
+      }
 
       if (assignees.length === 0) {
         alert('กรุณาเลือกช่างหรือผู้รับเหมาอย่างน้อย 1 คน');
@@ -1431,6 +1562,8 @@
       const payload = {
         requestCode: activeRequestCode,
         requestCodes: [activeRequestCode],
+        assetCode: assetCode,
+        componentCode: componentCode || null,
         assignees: assignees,
         assigneeIds: assigneeIds,
         assigneeType: currentAssigneeType,
