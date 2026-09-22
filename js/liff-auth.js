@@ -82,12 +82,50 @@ const LiffAuth = (function () {
   }
 
   /**
+   * บันทึกการเข้าสู่ระบบผ่าน Username/Password
+   */
+  function loginWithCredentials(userData) {
+    currentUser = {
+      userId: userData.userId || userData.line_user_id || userData.id || userData.username,
+      displayName: userData.displayName || userData.name || userData.username,
+      name: userData.name || userData.displayName || userData.username,
+      pictureUrl: userData.pictureUrl || "",
+      isLoggedIn: true,
+      authSource: "credentials",
+      role: userData.role || userData.accessRights || "user",
+      accessRights: userData.accessRights || userData.role || "user",
+      deptCode: userData.deptCode || userData.dept_code || "",
+      empCode: userData.empCode || userData.emp_code || "",
+      username: userData.username || ""
+    };
+    saveUser(currentUser);
+    try {
+      localStorage.setItem(`cmms_user_sheet_${currentUser.userId}`, JSON.stringify(currentUser));
+    } catch (e) {}
+    return currentUser;
+  }
+
+  /**
    * เริ่มต้นระบบ LIFF และดึง User Profile
    * @param {Object} options - { liffId, requiredAuth: true/false, onReady: Function }
    */
   async function init(options = {}) {
     const liffId = options.liffId || DEFAULT_LIFF_ID;
     const requiredAuth = options.requiredAuth !== false; // default true
+
+    // ตรวจสอบก่อนว่าเคยเข้าสู่ระบบด้วย Username/Password (Credentials) หรือไม่
+    const cachedEarly = getCachedUser();
+    if (cachedEarly && cachedEarly.isLoggedIn && cachedEarly.authSource === "credentials") {
+      currentUser = cachedEarly;
+      if (typeof liff !== "undefined") {
+        liff.init({ liffId }).catch(e => console.warn("Background LIFF init:", e));
+      }
+      hideLoading();
+      if (typeof options.onReady === "function") {
+        options.onReady(currentUser);
+      }
+      return currentUser;
+    }
 
     showLoading("กำลังเชื่อมต่อระบบ LINE...", "กรุณารอสักครู่");
 
@@ -340,6 +378,7 @@ const LiffAuth = (function () {
     init,
     getUser,
     saveUser,
+    loginWithCredentials,
     logout,
     scanQRCode,
     showLoading,

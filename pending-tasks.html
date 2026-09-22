@@ -27,6 +27,78 @@
       color: #1d4ed8;
       border: 1px solid #bfdbfe;
     }
+    /* Search Bar Modern Styling */
+    .search-bar-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-md);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s ease;
+      margin-bottom: 14px;
+    }
+    .search-bar-wrapper:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+      background: #ffffff;
+    }
+    .search-bar-wrapper.approval-mode:focus-within {
+      border-color: #d97706;
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.14), 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      font-size: 14px;
+      color: #94a3b8;
+      pointer-events: none;
+      transition: color 0.2s ease;
+    }
+    .search-bar-wrapper:focus-within .search-icon {
+      color: var(--primary);
+    }
+    .search-bar-wrapper.approval-mode:focus-within .search-icon {
+      color: #d97706;
+    }
+    .search-input {
+      width: 100%;
+      height: 44px;
+      padding: 10px 40px 10px 42px;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-family: inherit;
+      font-size: 12.5px;
+      color: var(--text-main);
+    }
+    .search-input::placeholder {
+      color: #94a3b8;
+      font-size: 12px;
+    }
+    #clearSearchBtn {
+      position: absolute;
+      right: 8px;
+      background: #f1f5f9;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      transition: all 0.15s ease;
+      padding: 0;
+    }
+    #clearSearchBtn:hover {
+      background: #e2e8f0;
+      color: var(--text-main);
+    }
+
     .filter-tabs {
       display: flex;
       gap: 6px;
@@ -804,6 +876,10 @@
 
         metricsGrid.style.display = 'grid';
         subTabs.style.display = 'flex';
+        const searchWrapper = document.querySelector('.search-bar-wrapper');
+        const searchInput = document.getElementById('searchInput');
+        if (searchWrapper) searchWrapper.classList.remove('approval-mode');
+        if (searchInput) searchInput.placeholder = "ค้นหารหัสคำขอ, เครื่องจักร, อุปกรณ์, อาการเสีย หรือผู้แจ้ง...";
         renderPendingCards();
       } else {
         btnAppr.style.background = '#d97706';
@@ -818,6 +894,10 @@
 
         metricsGrid.style.display = 'none';
         subTabs.style.display = 'none';
+        const searchWrapper = document.querySelector('.search-bar-wrapper');
+        const searchInput = document.getElementById('searchInput');
+        if (searchWrapper) searchWrapper.classList.add('approval-mode');
+        if (searchInput) searchInput.placeholder = "ค้นหาใบสั่งงาน (WO), รหัสคำขอ, เครื่องจักร, ช่างผู้รับผิดชอบ, สาเหตุ...";
         renderApprovalCards();
       }
     }
@@ -1201,8 +1281,8 @@
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-check-double"></i> ยืนยันอนุมัติงาน';
 
-        if (res && res.status === "error") {
-          throw new Error(res.message || "ไม่สามารถอนุมัติใบสั่งงานได้");
+        if (res && (res.status === "error" || res.success === false || res.error)) {
+          throw new Error(res.message || res.error || "ไม่สามารถอนุมัติใบสั่งงานได้");
         }
 
         alert(`อนุมัติใบสั่งงาน ${woNo} เรียบร้อยแล้ว!\nระบบได้ส่งต่องานไปยังผู้แจ้งเพื่อตรวจรับงาน (Pending Acceptance) เรียบร้อย`);

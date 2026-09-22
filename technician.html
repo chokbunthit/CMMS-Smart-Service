@@ -181,14 +181,69 @@
 
     .tag-pm {
       background: #ecfeff;
-      color: #0e7490;
+      color: #0891b2;
       border: 1px solid #a5f3fc;
     }
 
     .tag-cm {
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+    }
+
+    .tag-bm {
       background: #fef2f2;
-      color: #b91c1c;
+      color: #dc2626;
       border: 1px solid #fecaca;
+    }
+
+    .future-plan-badge {
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .btn-future-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1.5px solid #cbd5e1;
+      background: #f8fafc;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-future-toggle:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .btn-future-toggle.active {
+      background: #0284c7;
+      color: white;
+      border-color: #0284c7;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+    }
+
+    .btn-future-toggle.active i {
+      color: white !important;
+    }
+
+    .btn-future-toggle.active #futurePMCountBadge {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
     }
 
     .wo-subtasks-preview {
@@ -703,22 +758,52 @@
           </div>
         </div>
 
-        <!-- Quick Summary Stats Grid -->
-        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
-          <div class="stat-box" style="padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 2px;">
-            <span style="font-size: 10.5px; color: var(--text-muted);">ทั้งหมด</span>
-            <span id="statAllCount" style="font-size: 16px; font-weight: 700; color: var(--text-main);">0</span>
+        <!-- Backlog Summary Stats Grid (แยก BM / CM / PM) -->
+        <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px;">
+          <div class="stat-box stat-box-bm" onclick="setTaskFilter('bm')" style="padding: 8px 6px; flex-direction: column; align-items: center; text-align: center; cursor: pointer; border-color: #fca5a5; background: #fff5f5;">
+            <div style="font-size: 10px; font-weight: 700; color: #dc2626; display: flex; align-items: center; gap: 3px;">
+              <span class="pulse-dot" style="width: 5px; height: 5px; background: #dc2626; border-radius: 50%; display: inline-block;"></span> BM
+            </div>
+            <span id="statBmCount" style="font-size: 16px; font-weight: 800; color: #dc2626; line-height: 1.2; margin-top: 2px;">0</span>
+            <span style="font-size: 9px; color: #ef4444;">เครื่องหยุด</span>
           </div>
-          <div class="stat-box"
-            style="padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 2px; border-color: #bfdbfe;">
-            <span style="font-size: 10.5px; color: #1d4ed8;">กำลังดำเนินการ</span>
-            <span id="statProgressCount" style="font-size: 16px; font-weight: 700; color: #1d4ed8;">0</span>
+
+          <div class="stat-box stat-box-cm" onclick="setTaskFilter('cm')" style="padding: 8px 6px; flex-direction: column; align-items: center; text-align: center; cursor: pointer; border-color: #bfdbfe; background: #f8faff;">
+            <div style="font-size: 10px; font-weight: 700; color: #2563eb; display: flex; align-items: center; gap: 3px;">
+              <i class="fa-solid fa-wrench" style="font-size: 9px;"></i> CM
+            </div>
+            <span id="statCmCount" style="font-size: 16px; font-weight: 800; color: #2563eb; line-height: 1.2; margin-top: 2px;">0</span>
+            <span style="font-size: 9px; color: #3b82f6;">แจ้งซ่อม</span>
           </div>
-          <div class="stat-box"
-            style="padding: 8px 10px; flex-direction: column; align-items: flex-start; gap: 2px; border-color: #bbf7d0;">
-            <span style="font-size: 10.5px; color: #15803d;">เสร็จสิ้นแล้ว</span>
-            <span id="statDoneCount" style="font-size: 16px; font-weight: 700; color: #15803d;">0</span>
+
+          <div class="stat-box stat-box-pm" onclick="setTaskFilter('pm')" style="padding: 8px 6px; flex-direction: column; align-items: center; text-align: center; cursor: pointer; border-color: #a5f3fc; background: #f0fdfa;">
+            <div style="font-size: 10px; font-weight: 700; color: #0891b2; display: flex; align-items: center; gap: 3px;">
+              <i class="fa-solid fa-calendar-check" style="font-size: 9px;"></i> PM
+            </div>
+            <span id="statPmCount" style="font-size: 16px; font-weight: 800; color: #0891b2; line-height: 1.2; margin-top: 2px;">0</span>
+            <span style="font-size: 9px; color: #06b6d4;">บำรุงรักษา</span>
           </div>
+
+          <div class="stat-box" onclick="setTaskFilter('all')" style="padding: 8px 6px; flex-direction: column; align-items: center; text-align: center; cursor: pointer; background: #f8fafc;">
+            <div style="font-size: 10px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 3px;">
+              <i class="fa-solid fa-clipboard-list" style="font-size: 9px;"></i> รวมค้าง
+            </div>
+            <span id="statTotalPendingCount" style="font-size: 16px; font-weight: 800; color: #0f172a; line-height: 1.2; margin-top: 2px;">0</span>
+            <span style="font-size: 9px; color: #64748b;">เดือนนี้</span>
+          </div>
+        </div>
+
+        <!-- Month Filter Indicator & Future PM Plan Toggle -->
+        <div class="month-control-bar" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 7px 12px; box-shadow: var(--shadow-sm);">
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #334155; font-weight: 600;">
+            <i class="fa-regular fa-calendar-days" style="color: var(--primary);"></i>
+            <span>งานเดือน: <strong id="currentMonthLabelText" style="color: var(--primary);">-</strong></span>
+          </div>
+          <button type="button" id="btnToggleFuturePM" class="btn-future-toggle" onclick="toggleFuturePMSwitch()" title="แตะเพื่อเปิด/ปิดแสดงงาน PM ล่วงหน้า">
+            <i class="fa-solid fa-calendar-plus" style="font-size: 11px; color: #0891b2;"></i>
+            <span id="futurePMBtnLabel">แสดงงานล่วงหน้า</span>
+            <span id="futurePMCountBadge" style="background: #e0f2fe; color: #0369a1; padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 700;">0</span>
+          </button>
         </div>
 
         <!-- Search Bar -->
@@ -728,30 +813,30 @@
             oninput="handleSearchFilter()" />
         </div>
 
-        <!-- Filter Pills Tabs -->
+        <!-- Filter Pills Tabs (แยก BM, CM, PM, ทั้งหมด, เสร็จสิ้น) -->
         <div class="filter-scroll">
           <button class="filter-tab active" data-filter="all" onclick="setTaskFilter('all')">
-            <span>ทั้งหมด</span>
+            <span>งานค้างทั้งหมด</span>
             <span class="tab-badge" id="badgeFilterAll">0</span>
           </button>
-          <button class="filter-tab" data-filter="progress" onclick="setTaskFilter('progress')">
-            <i class="fa-solid fa-spinner fa-spin-pulse" style="font-size: 10px; color: #2563eb;"></i>
-            <span>กำลังดำเนินการ</span>
-            <span class="tab-badge" id="badgeFilterProgress">0</span>
+          <button class="filter-tab" data-filter="bm" onclick="setTaskFilter('bm')">
+            <span class="pulse-dot" style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%; display: inline-block;"></span>
+            <span>BM (เครื่องหยุด)</span>
+            <span class="tab-badge" id="badgeFilterBM" style="color: #dc2626; font-weight: 700;">0</span>
+          </button>
+          <button class="filter-tab" data-filter="cm" onclick="setTaskFilter('cm')">
+            <i class="fa-solid fa-wrench" style="font-size: 10px; color: #2563eb;"></i>
+            <span>CM (แจ้งซ่อม)</span>
+            <span class="tab-badge" id="badgeFilterCM">0</span>
           </button>
           <button class="filter-tab" data-filter="pm" onclick="setTaskFilter('pm')">
             <i class="fa-solid fa-calendar-check" style="font-size: 10px; color: #0891b2;"></i>
-            <span>งาน PM</span>
+            <span>PM (บำรุงรักษา)</span>
             <span class="tab-badge" id="badgeFilterPM">0</span>
-          </button>
-          <button class="filter-tab" data-filter="urgent" onclick="setTaskFilter('urgent')">
-            <i class="fa-solid fa-fire" style="font-size: 10px; color: #ef4444;"></i>
-            <span>ด่วน/ฉุกเฉิน</span>
-            <span class="tab-badge" id="badgeFilterUrgent">0</span>
           </button>
           <button class="filter-tab" data-filter="done" onclick="setTaskFilter('done')">
             <i class="fa-solid fa-circle-check" style="font-size: 10px; color: #16a34a;"></i>
-            <span>เสร็จสิ้น</span>
+            <span>เสร็จสิ้นแล้ว</span>
             <span class="tab-badge" id="badgeFilterDone">0</span>
           </button>
         </div>
@@ -1042,41 +1127,135 @@
       groupedWorkOrders = Array.from(groupMap.values());
     }
 
+    // Toggle แสดงงานแผนล่วงหน้า (Future PM)
+    let showFuturePM = false;
+
+    const THAI_MONTHS = [
+      "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+      "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    ];
+
+    function getWOType(wo) {
+      const t = String(wo.woType || "").toUpperCase();
+      const no = String(wo.woNo || "").toUpperCase();
+      const req = String(wo.reqNo || "").toUpperCase();
+      if (t.includes("BM") || no.startsWith("BM") || req.startsWith("BM")) return "BM";
+      if (t.includes("PM") || no.includes("PM") || (wo.workType && String(wo.workType).includes("PM"))) return "PM";
+      return "CM";
+    }
+
+    function isUnfinished(wo) {
+      const s = String(wo.status || "").toLowerCase();
+      return !s.includes("done") && !s.includes("เสร็จ") && !s.includes("closed") && !s.includes("ปิดงาน");
+    }
+
+    function isCurrentMonthOrOverdue(wo) {
+      const dateStr = wo.dueDate || wo.assignedDate || "";
+      if (!dateStr || dateStr === "-") return true;
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth(); // 0 - 11
+
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return true;
+
+      const y = d.getFullYear();
+      const m = d.getMonth();
+
+      if (y < currentYear) return true; // Overdue from previous year
+      if (y === currentYear && m <= currentMonth) return true; // Overdue or current month
+      return false; // Future month
+    }
+
+    function isFutureTask(wo) {
+      return !isCurrentMonthOrOverdue(wo);
+    }
+
+    function toggleFuturePMSwitch() {
+      showFuturePM = !showFuturePM;
+      const btn = document.getElementById("btnToggleFuturePM");
+      const label = document.getElementById("futurePMBtnLabel");
+      if (btn) {
+        if (showFuturePM) {
+          btn.classList.add("active");
+          if (label) label.textContent = "ซ่อนงานล่วงหน้า";
+        } else {
+          btn.classList.remove("active");
+          if (label) label.textContent = "แสดงงานล่วงหน้า";
+        }
+      }
+      renderStatsAndBadges();
+      renderWorkOrdersList();
+    }
+
     /**
      * คำนวณสรุปสถิติและ Badge
      */
     function renderStatsAndBadges() {
-      let countAll = groupedWorkOrders.length;
-      let countProgress = 0;
+      const now = new Date();
+      const monthLabel = `${THAI_MONTHS[now.getMonth()]} ${now.getFullYear() + 543}`;
+      const monthEl = document.getElementById("currentMonthLabelText");
+      if (monthEl) monthEl.textContent = monthLabel;
+
+      let countBmPending = 0;
+      let countCmPending = 0;
+      let countPmPending = 0;
+      let countTotalPending = 0;
+      let countFuturePM = 0;
       let countDone = 0;
-      let countPM = 0;
-      let countUrgent = 0;
 
       groupedWorkOrders.forEach(wo => {
-        const s = (wo.status || "").toLowerCase();
-        const p = (wo.priority || "").toLowerCase();
-        const t = (wo.woType || "").toUpperCase();
+        const type = getWOType(wo);
+        const unfinished = isUnfinished(wo);
+        const isCurrentOrPast = isCurrentMonthOrOverdue(wo);
+        const isFuture = isFutureTask(wo);
 
-        if (s.includes("done") || s.includes("เสร็จ") || s.includes("comp")) {
+        if (!unfinished) {
           countDone++;
-        } else {
-          countProgress++;
+          return;
         }
 
-        if (t.includes("PM")) countPM++;
-        if (p.includes("urgent") || p.includes("high") || p.includes("ด่วน")) countUrgent++;
+        if (isFuture && type === "PM") {
+          countFuturePM++;
+        }
+
+        // เฉพาะงานเดือนปัจจุบัน (หรือรวมล่วงหน้าหากเปิด showFuturePM)
+        if (isCurrentOrPast || showFuturePM) {
+          if (type === "BM") countBmPending++;
+          else if (type === "CM") countCmPending++;
+          else if (type === "PM") countPmPending++;
+          countTotalPending++;
+        }
       });
 
-      document.getElementById("statAllCount").textContent = countAll;
-      document.getElementById("statProgressCount").textContent = countProgress;
-      document.getElementById("statDoneCount").textContent = countDone;
-      document.getElementById("activeTaskCount").textContent = countProgress;
+      // Quick Stats
+      const statBm = document.getElementById("statBmCount");
+      const statCm = document.getElementById("statCmCount");
+      const statPm = document.getElementById("statPmCount");
+      const statTot = document.getElementById("statTotalPendingCount");
+      const activeCount = document.getElementById("activeTaskCount");
+      const futureBadge = document.getElementById("futurePMCountBadge");
 
-      document.getElementById("badgeFilterAll").textContent = countAll;
-      document.getElementById("badgeFilterProgress").textContent = countProgress;
-      document.getElementById("badgeFilterPM").textContent = countPM;
-      document.getElementById("badgeFilterUrgent").textContent = countUrgent;
-      document.getElementById("badgeFilterDone").textContent = countDone;
+      if (statBm) statBm.textContent = countBmPending;
+      if (statCm) statCm.textContent = countCmPending;
+      if (statPm) statPm.textContent = countPmPending;
+      if (statTot) statTot.textContent = countTotalPending;
+      if (activeCount) activeCount.textContent = countTotalPending;
+      if (futureBadge) futureBadge.textContent = countFuturePM;
+
+      // Badges in Tabs
+      const badgeAll = document.getElementById("badgeFilterAll");
+      const badgeBM = document.getElementById("badgeFilterBM");
+      const badgeCM = document.getElementById("badgeFilterCM");
+      const badgePM = document.getElementById("badgeFilterPM");
+      const badgeDone = document.getElementById("badgeFilterDone");
+
+      if (badgeAll) badgeAll.textContent = countTotalPending;
+      if (badgeBM) badgeBM.textContent = countBmPending;
+      if (badgeCM) badgeCM.textContent = countCmPending;
+      if (badgePM) badgePM.textContent = countPmPending;
+      if (badgeDone) badgeDone.textContent = countDone;
     }
 
     /**
@@ -1106,19 +1285,26 @@
       const searchKeyword = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
 
       const filtered = groupedWorkOrders.filter(wo => {
-        // 1. Filter by Status / Type
-        const s = (wo.status || "").toLowerCase();
-        const p = (wo.priority || "").toLowerCase();
-        const t = (wo.woType || "").toUpperCase();
+        const type = getWOType(wo);
+        const unfinished = isUnfinished(wo);
+        const isCurrentOrPast = isCurrentMonthOrOverdue(wo);
 
-        if (currentFilter === "progress") {
-          if (s.includes("done") || s.includes("เสร็จ") || s.includes("comp")) return false;
-        } else if (currentFilter === "done") {
-          if (!s.includes("done") && !s.includes("เสร็จ") && !s.includes("comp")) return false;
-        } else if (currentFilter === "pm") {
-          if (!t.includes("PM")) return false;
-        } else if (currentFilter === "urgent") {
-          if (!p.includes("urgent") && !p.includes("high") && !p.includes("ด่วน")) return false;
+        // 1. หมวดงานเสร็จสิ้น
+        if (currentFilter === "done") {
+          if (unfinished) return false;
+        } else {
+          // หมวดงานค้าง (ยังไม่เสร็จ)
+          if (!unfinished) return false;
+
+          // กรองงานเดือนปัจจุบัน ยกเว้นเมื่อกดเปิดงานล่วงหน้า
+          if (!showFuturePM && !isCurrentOrPast) {
+            return false;
+          }
+
+          // กรองตามประเภทแท็บ
+          if (currentFilter === "bm" && type !== "BM") return false;
+          if (currentFilter === "cm" && type !== "CM") return false;
+          if (currentFilter === "pm" && type !== "PM") return false;
         }
 
         // 2. Filter by Search Query
@@ -1131,11 +1317,18 @@
       });
 
       if (filtered.length === 0) {
+        let emptyTitle = "ไม่พบรายการงานค้าง";
+        let emptyDesc = "ไม่มีรายการงานในหมวดนี้สำหรับเดือนปัจจุบัน";
+        if (currentFilter === "bm") emptyDesc = "ไม่มีงานเสียฉุกเฉิน (BM) ค้างในขณะนี้";
+        else if (currentFilter === "cm") emptyDesc = "ไม่มีงานแจ้งซ่อมทั่วไป (CM) ค้างในขณะนี้";
+        else if (currentFilter === "pm") emptyDesc = "ไม่มีงานบำรุงรักษา (PM) ค้างในรอบเดือนนี้ (แตะปุ่ม 'แสดงงานล่วงหน้า' เพื่อดูแผนงานอนาคต)";
+        else if (currentFilter === "done") emptyDesc = "ยังไม่มีประวัติงานที่ปิดในรอบนี้";
+
         container.innerHTML = `
           <div class="empty-state">
-            <i class="fa-solid fa-clipboard-list"></i>
-            <p style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-top: 4px;">ไม่พบใบงานที่ค้นหา</p>
-            <p style="font-size: 11.5px; margin-top: 2px;">ไม่มีรายการงานในหมวดนี้</p>
+            <i class="fa-solid fa-clipboard-check" style="font-size: 28px; color: #10b981; margin-bottom: 8px;"></i>
+            <p style="font-size: 13px; font-weight: 700; color: var(--text-main);">${emptyTitle}</p>
+            <p style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">${emptyDesc}</p>
           </div>
         `;
         return;
@@ -1143,26 +1336,24 @@
 
       let html = "";
       filtered.forEach(wo => {
-        const woType = (wo.woType || "").toUpperCase();
+        const type = getWOType(wo);
+        const isFuture = isFutureTask(wo);
 
         let typeTagClass = "tag-cm";
-        let typeLabel = "CM (Corrective)"; // หรือคำอธิบายที่ต้องการ
+        let typeLabel = "CM (แจ้งซ่อม)";
 
-        if (woType.includes("PM")) {
+        if (type === "PM") {
           typeTagClass = "tag-pm";
-          typeLabel = "PM (Preventive)";
-        } else if (woType.includes("BM")) {
+          typeLabel = "PM (บำรุงรักษา)";
+        } else if (type === "BM") {
           typeTagClass = "tag-bm";
           typeLabel = "BM (Breakdown)";
-        } else if (woType.includes("CM")) {
-          typeTagClass = "tag-cm";
-          typeLabel = "CM (Corrective)";
         }
 
         let priorityClass = "priority-medium";
         let priorityBadge = `<span class="badge" style="background: #eff6ff; color: #1d4ed8;">ปกติ</span>`;
         const p = (wo.priority || "").toLowerCase();
-        if (p.includes("urgent") || p.includes("ฉุกเฉิน")) {
+        if (p.includes("urgent") || p.includes("ฉุกเฉิน") || type === "BM") {
           priorityClass = "priority-urgent";
           priorityBadge = `<span class="badge" style="background: #fee2e2; color: #b91c1c;"><i class="fa-solid fa-fire"></i> ด่วนมาก</span>`;
         } else if (p.includes("high") || p.includes("สูง")) {
@@ -1173,7 +1364,7 @@
           priorityBadge = `<span class="badge" style="background: #ecfdf5; color: #15803d;">ต่ำ</span>`;
         }
 
-        const isDone = (wo.status || "").toLowerCase().includes("done") || (wo.status || "").toLowerCase().includes("comp");
+        const isDone = !isUnfinished(wo);
         const statusBadge = isDone
           ? `<span class="badge badge-completed"><i class="fa-solid fa-check"></i> เสร็จสิ้น</span>`
           : `<span class="badge badge-progress"><i class="fa-solid fa-clock"></i> กำลังทำ</span>`;
@@ -1216,6 +1407,7 @@
                 <div class="wo-number">
                   <span>${wo.woNo}</span>
                   <span class="wo-type-tag ${typeTagClass}">${typeLabel}</span>
+                  ${isFuture ? '<span class="future-plan-badge"><i class="fa-solid fa-calendar-arrow-up"></i> แผนล่วงหน้า</span>' : ''}
                 </div>
                 <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
                   Ref Req: <strong>${wo.reqNo}</strong>
@@ -1242,7 +1434,7 @@
             ${subtasksHtml}
 
             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--text-sub); border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 6px;">
-              <span><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>กำหนดเสร็จ: ${wo.dueDate}</span>
+              <span><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>กำหนดเสร็จ: ${wo.dueDate || '-'}</span>
               <button type="button" class="btn-card-action" onclick="openWorkOrderDetail('${wo.woNo}', 'ALL')" title="เปิดใบงานเพื่อดูและบันทึกปิดงาน">
                 <i class="fa-solid fa-folder-open"></i>
                 <span>เปิดใบงาน / ปิดงาน</span>
