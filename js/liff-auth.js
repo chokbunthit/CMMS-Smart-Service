@@ -113,9 +113,9 @@ const LiffAuth = (function () {
     const liffId = options.liffId || DEFAULT_LIFF_ID;
     const requiredAuth = options.requiredAuth !== false; // default true
 
-    // ตรวจสอบก่อนว่าเคยเข้าสู่ระบบด้วย Username/Password (Credentials) หรือไม่
+    // ตรวจสอบก่อนว่าเคยเข้าสู่ระบบไว้หรือไม่ (ไม่ว่าจะเป็น Username/Password หรือ Session LINE เดิม)
     const cachedEarly = getCachedUser();
-    if (cachedEarly && cachedEarly.isLoggedIn && cachedEarly.authSource === "credentials") {
+    if (cachedEarly && cachedEarly.isLoggedIn && cachedEarly.userId) {
       currentUser = cachedEarly;
       if (typeof liff !== "undefined") {
         liff.init({ liffId }).catch(e => console.warn("Background LIFF init:", e));
@@ -136,8 +136,11 @@ const LiffAuth = (function () {
         throw new Error("ไม่สามารถโหลด LINE LIFF SDK ได้ กรุณาเชื่อมต่ออินเทอร์เน็ต");
       }
 
-      // 2. เรียก liff.init
-      await liff.init({ liffId });
+      // 2. เรียก liff.init พร้อม Timeout 3.5 วินาทีเพื่อไม่ให้ค้างหน้าโหลด
+      await Promise.race([
+        liff.init({ liffId }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("LIFF connection timeout")), 3500))
+      ]);
       isInitialized = true;
 
       // 3. ตรวจสอบสถานะการเข้าสู่ระบบ
@@ -230,7 +233,9 @@ const LiffAuth = (function () {
       // หากจำเป็นต้อง Auth แต่เปิดใน Browser ทั่วไป -> redirect ไปหน้า Login
       if (requiredAuth) {
         hideLoading();
-        window.location.href = "login.html";
+        const currentFile = window.location.pathname.split("/").pop() || "index.html";
+        const redirectParam = encodeURIComponent(currentFile + window.location.search);
+        window.location.href = `login.html?redirect=${redirectParam}`;
         return null;
       } else {
         // อนุญาต Guest
@@ -263,7 +268,9 @@ const LiffAuth = (function () {
 
       hideLoading();
       if (requiredAuth) {
-        window.location.href = "login.html";
+        const currentFile = window.location.pathname.split("/").pop() || "index.html";
+        const redirectParam = encodeURIComponent(currentFile + window.location.search);
+        window.location.href = `login.html?redirect=${redirectParam}`;
         return null;
       }
 

@@ -251,6 +251,27 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    .login-notice {
+      display: none;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      font-size: 12.5px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      text-align: left;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .login-notice.warning {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #b45309;
+    }
+
     .login-hint {
       margin-top: 18px;
       padding: 10px 12px;
@@ -271,7 +292,7 @@
     .login-footer {
       margin-top: 20px;
       font-size: 11px;
-      color: rgba(255, 255, 255, 0.7);
+      color: #94a3b8;
     }
 
     .loading-spinner-small {
@@ -284,8 +305,13 @@
       display: none;
     }
 
+    .btn-loading {
+      pointer-events: none;
+      opacity: 0.85;
+    }
+
     .btn-loading .loading-spinner-small {
-      display: block;
+      display: inline-block;
     }
 
     .btn-loading .btn-text {
@@ -309,6 +335,12 @@
       <!-- Title -->
       <h1 class="login-title">AUT CMMS</h1>
       <p class="login-subtitle">Smart Maintenance Service System</p>
+
+      <!-- Redirect Notice Box -->
+      <div id="loginNotice" class="login-notice">
+        <i id="loginNoticeIcon" class="fa-solid fa-circle-info"></i>
+        <span id="loginNoticeText">กรุณาเข้าสู่ระบบ</span>
+      </div>
 
       <!-- Alert Box -->
       <div id="loginAlert" class="login-alert">
@@ -394,6 +426,41 @@
   <script>
     const LIFF_ID = "2011050588-FTDVMv4L";
 
+    function getRedirectUrl() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const red = params.get("redirect");
+        if (red) {
+          // ป้องกัน Open Redirect
+          const clean = decodeURIComponent(red).replace(/^[\/\\]+/, "");
+          if (!clean.startsWith("http://") && !clean.startsWith("https://") && !clean.startsWith("//")) {
+            return clean;
+          }
+        }
+      } catch (e) {}
+      return "index.html";
+    }
+
+    function checkRedirectNotice() {
+      const params = new URLSearchParams(window.location.search);
+      const red = params.get("redirect") || "";
+      const noticeBox = document.getElementById("loginNotice");
+      const noticeText = document.getElementById("loginNoticeText");
+      const noticeIcon = document.getElementById("loginNoticeIcon");
+
+      if (red.includes("create-ticket")) {
+        noticeBox.className = "login-notice warning";
+        noticeIcon.className = "fa-solid fa-triangle-exclamation";
+        noticeText.textContent = "กรุณาเข้าสู่ระบบก่อนทำการแจ้งซ่อม";
+        noticeBox.style.display = "flex";
+      } else if (red.includes("profile")) {
+        noticeBox.className = "login-notice";
+        noticeIcon.className = "fa-solid fa-circle-info";
+        noticeText.textContent = "กรุณาเข้าสู่ระบบเพื่อจัดการข้อมูลโปรไฟล์";
+        noticeBox.style.display = "flex";
+      }
+    }
+
     function showLoginAlert(msg) {
       const el = document.getElementById("loginAlert");
       const txt = document.getElementById("loginAlertText");
@@ -444,7 +511,7 @@
         if (res && res.status === "success" && res.data) {
           // บันทึก Session เข้าสู่ระบบ
           LiffAuth.loginWithCredentials(res.data);
-          window.location.href = "index.html";
+          window.location.href = getRedirectUrl();
           return;
         }
 
@@ -477,7 +544,7 @@
         if (!liff.isLoggedIn()) {
           liff.login();
         } else {
-          window.location.href = "index.html";
+          window.location.href = getRedirectUrl();
         }
       } catch (err) {
         console.error("LINE Login error:", err);
@@ -489,17 +556,19 @@
 
     // เมื่อโหลดหน้า ตรวจสอบว่าเคยเข้าสู่ระบบแล้วหรือไม่
     window.addEventListener("load", async () => {
+      checkRedirectNotice();
+
       try {
         const cached = LiffAuth.getUser();
         if (cached && cached.isLoggedIn) {
-          window.location.href = "index.html";
+          window.location.href = getRedirectUrl();
           return;
         }
 
         if (typeof liff !== "undefined") {
           await liff.init({ liffId: LIFF_ID });
           if (liff.isLoggedIn()) {
-            window.location.href = "index.html";
+            window.location.href = getRedirectUrl();
           }
         }
       } catch (err) {

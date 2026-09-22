@@ -834,6 +834,11 @@
             <span>PM (บำรุงรักษา)</span>
             <span class="tab-badge" id="badgeFilterPM">0</span>
           </button>
+          <button class="filter-tab" data-filter="pending_approval" onclick="setTaskFilter('pending_approval')">
+            <i class="fa-solid fa-hourglass-half" style="font-size: 10px; color: #d97706;"></i>
+            <span>รออนุมัติ</span>
+            <span class="tab-badge" id="badgeFilterPendingApproval" style="color: #b45309; background: #fef3c7; font-weight: 700;">0</span>
+          </button>
           <button class="filter-tab" data-filter="done" onclick="setTaskFilter('done')">
             <i class="fa-solid fa-circle-check" style="font-size: 10px; color: #16a34a;"></i>
             <span>เสร็จสิ้นแล้ว</span>
@@ -1144,9 +1149,31 @@
       return "CM";
     }
 
+    function isTechnicianFinished(wo) {
+      const s = String(wo.status || "").toLowerCase().trim();
+      return s.includes("pending approval") ||
+             s.includes("รอหัวหน้าอนุมัติ") ||
+             s.includes("รออนุมัติ") ||
+             s.includes("approved") ||
+             s.includes("อนุมัติแล้ว") ||
+             s.includes("pending acceptance") ||
+             s.includes("รอตรวจรับ") ||
+             s.includes("done") ||
+             s.includes("เสร็จ") ||
+             s.includes("closed") ||
+             s.includes("ปิดงาน") ||
+             s.includes("comp");
+    }
+
+    function isPendingApproval(wo) {
+      const s = String(wo.status || "").toLowerCase().trim();
+      return s.includes("pending approval") ||
+             s.includes("รอหัวหน้าอนุมัติ") ||
+             s.includes("รออนุมัติ");
+    }
+
     function isUnfinished(wo) {
-      const s = String(wo.status || "").toLowerCase();
-      return !s.includes("done") && !s.includes("เสร็จ") && !s.includes("closed") && !s.includes("ปิดงาน");
+      return !isTechnicianFinished(wo);
     }
 
     function isCurrentMonthOrOverdue(wo) {
@@ -1203,13 +1230,19 @@
       let countPmPending = 0;
       let countTotalPending = 0;
       let countFuturePM = 0;
+      let countPendingApproval = 0;
       let countDone = 0;
 
       groupedWorkOrders.forEach(wo => {
         const type = getWOType(wo);
         const unfinished = isUnfinished(wo);
+        const pendingApproval = isPendingApproval(wo);
         const isCurrentOrPast = isCurrentMonthOrOverdue(wo);
         const isFuture = isFutureTask(wo);
+
+        if (pendingApproval) {
+          countPendingApproval++;
+        }
 
         if (!unfinished) {
           countDone++;
@@ -1220,7 +1253,7 @@
           countFuturePM++;
         }
 
-        // เฉพาะงานเดือนปัจจุบัน (หรือรวมล่วงหน้าหากเปิด showFuturePM)
+        // เฉพาะงานค้างเดือนปัจจุบัน (หรือรวมล่วงหน้าหากเปิด showFuturePM)
         if (isCurrentOrPast || showFuturePM) {
           if (type === "BM") countBmPending++;
           else if (type === "CM") countCmPending++;
@@ -1249,12 +1282,14 @@
       const badgeBM = document.getElementById("badgeFilterBM");
       const badgeCM = document.getElementById("badgeFilterCM");
       const badgePM = document.getElementById("badgeFilterPM");
+      const badgePending = document.getElementById("badgeFilterPendingApproval");
       const badgeDone = document.getElementById("badgeFilterDone");
 
       if (badgeAll) badgeAll.textContent = countTotalPending;
       if (badgeBM) badgeBM.textContent = countBmPending;
       if (badgeCM) badgeCM.textContent = countCmPending;
       if (badgePM) badgePM.textContent = countPmPending;
+      if (badgePending) badgePending.textContent = countPendingApproval;
       if (badgeDone) badgeDone.textContent = countDone;
     }
 
@@ -1287,13 +1322,18 @@
       const filtered = groupedWorkOrders.filter(wo => {
         const type = getWOType(wo);
         const unfinished = isUnfinished(wo);
+        const pendingApproval = isPendingApproval(wo);
         const isCurrentOrPast = isCurrentMonthOrOverdue(wo);
 
-        // 1. หมวดงานเสร็จสิ้น
-        if (currentFilter === "done") {
+        // 1. Filter ตาม Tab ที่เลือก
+        if (currentFilter === "pending_approval") {
+          // หมวดรอหัวหน้าอนุมัติ
+          if (!pendingApproval) return false;
+        } else if (currentFilter === "done") {
+          // หมวดงานเสร็จสิ้นทั้งหมด
           if (unfinished) return false;
         } else {
-          // หมวดงานค้าง (ยังไม่เสร็จ)
+          // หมวดงานค้าง (ช่างยังทำไม่เสร็จ)
           if (!unfinished) return false;
 
           // กรองงานเดือนปัจจุบัน ยกเว้นเมื่อกดเปิดงานล่วงหน้า
@@ -1309,7 +1349,7 @@
 
         // 2. Filter by Search Query
         if (searchKeyword) {
-          const matchTarget = `${wo.woNo} ${wo.reqNo} ${wo.asset_code} ${wo.asset_name} ${wo.location} ${wo.workType} ${wo.department_name}`.toLowerCase();
+          const matchTarget = `${wo.woNo} ${wo.reqNo} ${wo.asset_code} ${wo.asset_name} ${wo.location} ${wo.workType} ${wo.department_name} ${wo.status}`.toLowerCase();
           if (!matchTarget.includes(searchKeyword)) return false;
         }
 
@@ -1317,12 +1357,14 @@
       });
 
       if (filtered.length === 0) {
-        let emptyTitle = "ไม่พบรายการงานค้าง";
+        let emptyTitle = "ไม่พบรายการงาน";
         let emptyDesc = "ไม่มีรายการงานในหมวดนี้สำหรับเดือนปัจจุบัน";
         if (currentFilter === "bm") emptyDesc = "ไม่มีงานเสียฉุกเฉิน (BM) ค้างในขณะนี้";
         else if (currentFilter === "cm") emptyDesc = "ไม่มีงานแจ้งซ่อมทั่วไป (CM) ค้างในขณะนี้";
         else if (currentFilter === "pm") emptyDesc = "ไม่มีงานบำรุงรักษา (PM) ค้างในรอบเดือนนี้ (แตะปุ่ม 'แสดงงานล่วงหน้า' เพื่อดูแผนงานอนาคต)";
+        else if (currentFilter === "pending_approval") emptyDesc = "ไม่มีรายการงานที่รอหัวหน้าอนุมัติในขณะนี้";
         else if (currentFilter === "done") emptyDesc = "ยังไม่มีประวัติงานที่ปิดในรอบนี้";
+        else emptyDesc = "ไม่มีรายการงานค้างในขณะนี้";
 
         container.innerHTML = `
           <div class="empty-state">
@@ -1338,6 +1380,8 @@
       filtered.forEach(wo => {
         const type = getWOType(wo);
         const isFuture = isFutureTask(wo);
+        const unfinished = isUnfinished(wo);
+        const pendingApproval = isPendingApproval(wo);
 
         let typeTagClass = "tag-cm";
         let typeLabel = "CM (แจ้งซ่อม)";
@@ -1364,10 +1408,17 @@
           priorityBadge = `<span class="badge" style="background: #ecfdf5; color: #15803d;">ต่ำ</span>`;
         }
 
-        const isDone = !isUnfinished(wo);
-        const statusBadge = isDone
-          ? `<span class="badge badge-completed"><i class="fa-solid fa-check"></i> เสร็จสิ้น</span>`
-          : `<span class="badge badge-progress"><i class="fa-solid fa-clock"></i> กำลังทำ</span>`;
+        const s = String(wo.status || "").toLowerCase().trim();
+        let statusBadge = "";
+        if (pendingApproval) {
+          statusBadge = `<span class="badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;"><i class="fa-solid fa-hourglass-half"></i> รอหัวหน้าอนุมัติ</span>`;
+        } else if (s.includes("approved") || s.includes("pending acceptance") || s.includes("รอตรวจรับ")) {
+          statusBadge = `<span class="badge" style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe;"><i class="fa-solid fa-clipboard-check"></i> รอผู้แจ้งตรวจรับ</span>`;
+        } else if (!unfinished) {
+          statusBadge = `<span class="badge badge-completed"><i class="fa-solid fa-check"></i> เสร็จสิ้น</span>`;
+        } else {
+          statusBadge = `<span class="badge badge-progress"><i class="fa-solid fa-clock"></i> กำลังทำ</span>`;
+        }
 
         // Subtasks preview list
         let subtasksHtml = "";
@@ -1399,6 +1450,10 @@
             </div>
           `;
         }
+
+        const isFinished = !unfinished;
+        const actionBtnLabel = isFinished ? "ดูรายละเอียดใบงาน" : "เปิดใบงาน / ปิดงาน";
+        const actionBtnIcon = isFinished ? "fa-file-lines" : "fa-folder-open";
 
         html += `
           <div class="wo-card ${priorityClass}">
@@ -1435,9 +1490,9 @@
 
             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--text-sub); border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 6px;">
               <span><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>กำหนดเสร็จ: ${wo.dueDate || '-'}</span>
-              <button type="button" class="btn-card-action" onclick="openWorkOrderDetail('${wo.woNo}', 'ALL')" title="เปิดใบงานเพื่อดูและบันทึกปิดงาน">
-                <i class="fa-solid fa-folder-open"></i>
-                <span>เปิดใบงาน / ปิดงาน</span>
+              <button type="button" class="btn-card-action" onclick="openWorkOrderDetail('${wo.woNo}', 'ALL')" title="${actionBtnLabel}">
+                <i class="fa-solid ${actionBtnIcon}"></i>
+                <span>${actionBtnLabel}</span>
                 <i class="fa-solid fa-chevron-right" style="font-size: 9px;"></i>
               </button>
             </div>
@@ -1475,6 +1530,7 @@
         document.getElementById("pageTitle").textContent = woNo;
         document.getElementById("pageSubtitle").textContent = "บันทึกผลการปฏิบัติงาน";
 
+        updateStickyActionBar(data.wo || targetWO || {});
         renderDrawerHeader(data);
         renderWOSpecificBody(data, targetKeyOrAction);
         renderExpenses(data);
@@ -1570,6 +1626,53 @@
     }
 
     /**
+     * อัปเดต Sticky Action Bar ด้านล่างของ Drawer ตามสถานะใบงาน
+     */
+    function updateStickyActionBar(wo) {
+      const bar = document.getElementById("stickyActionBar");
+      if (!bar) return;
+      const s = String(wo.status || wo.workorderStatus || "").toLowerCase().trim();
+      if (s.includes("pending approval") || s.includes("รอหัวหน้าอนุมัติ") || s.includes("รออนุมัติ")) {
+        bar.innerHTML = `
+          <button type="button" class="header-icon-btn" onclick="goBackToList()" style="width: 44px; height: 44px;" title="ย้อนกลับ">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <div style="flex: 1; text-align: center; font-size: 12.5px; font-weight: 700; color: #b45309; background: #fffbeb; border: 1px solid #fde68a; padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fa-solid fa-hourglass-half"></i> ช่างส่งตรวจแล้ว รอหัวหน้าอนุมัติ
+          </div>
+        `;
+      } else if (s.includes("approved") || s.includes("pending acceptance") || s.includes("รอตรวจรับ")) {
+        bar.innerHTML = `
+          <button type="button" class="header-icon-btn" onclick="goBackToList()" style="width: 44px; height: 44px;" title="ย้อนกลับ">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <div style="flex: 1; text-align: center; font-size: 12.5px; font-weight: 700; color: #4338ca; background: #eef2ff; border: 1px solid #c7d2fe; padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fa-solid fa-clipboard-check"></i> หัวหน้าอนุมัติแล้ว รอผู้แจ้งตรวจรับ
+          </div>
+        `;
+      } else if (s.includes("done") || s.includes("เสร็จ") || s.includes("closed") || s.includes("comp")) {
+        bar.innerHTML = `
+          <button type="button" class="header-icon-btn" onclick="goBackToList()" style="width: 44px; height: 44px;" title="ย้อนกลับ">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <div style="flex: 1; text-align: center; font-size: 12.5px; font-weight: 700; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fa-solid fa-circle-check"></i> ใบงานปิดงานเสร็จสมบูรณ์แล้ว
+          </div>
+        `;
+      } else {
+        bar.innerHTML = `
+          <button type="button" class="header-icon-btn" onclick="goBackToList()" style="width: 44px; height: 44px;" title="ย้อนกลับ">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <button type="button" class="btn-close-wo" id="btnCloseWorkOrder" onclick="openCloseModal()">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>ปิดทั้งใบงาน (Complete WO)</span>
+          </button>
+        `;
+      }
+    }
+
+    /**
      * Render Top Header Info of WO Detail
      */
     function renderDrawerHeader(data) {
@@ -1581,9 +1684,17 @@
       const targetWO = groupedWorkOrders.find(w => w.woNo === (wo.woNo || wo.wo_code || currentActiveWO));
       const isPM = isPMWorkOrder(wo, data);
 
-      const isDone = (wo.status || (targetWO && targetWO.status) || "").toLowerCase().includes("done") ||
-        (wo.status || "").toLowerCase().includes("comp") ||
-        (wo.status || "").toLowerCase().includes("เสร็จ");
+      const rawStatus = String((wo && (wo.status || wo.workorderStatus)) || (targetWO && targetWO.status) || "").toLowerCase().trim();
+      let statusBadgeHeader = "";
+      if (rawStatus.includes("pending approval") || rawStatus.includes("รอหัวหน้าอนุมัติ") || rawStatus.includes("รออนุมัติ")) {
+        statusBadgeHeader = `<span class="badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 11px;"><i class="fa-solid fa-hourglass-half"></i> รอหัวหน้าอนุมัติ</span>`;
+      } else if (rawStatus.includes("approved") || rawStatus.includes("pending acceptance") || rawStatus.includes("รอตรวจรับ")) {
+        statusBadgeHeader = `<span class="badge" style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 11px;"><i class="fa-solid fa-clipboard-check"></i> รอผู้แจ้งตรวจรับ</span>`;
+      } else if (rawStatus.includes("done") || rawStatus.includes("เสร็จ") || rawStatus.includes("closed") || rawStatus.includes("comp")) {
+        statusBadgeHeader = `<span class="badge badge-completed" style="font-size: 11px;"><i class="fa-solid fa-check"></i> เสร็จสิ้น</span>`;
+      } else {
+        statusBadgeHeader = `<span class="badge badge-progress" style="font-size: 11px;"><i class="fa-solid fa-clock"></i> กำลังดำเนินการ</span>`;
+      }
 
       const woCode = wo.woNo || wo.wo_code || currentActiveWO || "-";
       const reqCode = req.reqNo || req.request_code || wo.request_code || wo.reqNo || (targetWO && targetWO.reqNo) || "-";
@@ -1608,9 +1719,7 @@
             </div>
           </div>
           <div style="text-align: right;">
-            <span class="badge ${isDone ? 'badge-completed' : 'badge-progress'}" style="font-size: 11px;">
-              ${isDone ? '<i class="fa-solid fa-check"></i> เสร็จสิ้น' : '<i class="fa-solid fa-clock"></i> กำลังดำเนินการ'}
-            </span>
+            ${statusBadgeHeader}
           </div>
         </div>
 
