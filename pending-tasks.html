@@ -255,6 +255,49 @@
     .btn-assign:active {
       transform: translateY(0);
     }
+    .btn-reject {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 700;
+      font-family: inherit;
+      color: #dc2626;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-reject:hover {
+      background: #fee2e2;
+      border-color: #f87171;
+      color: #b91c1c;
+      transform: translateY(-1px);
+    }
+    .btn-reject:active {
+      transform: translateY(0);
+    }
+    .reject-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 600;
+      background: #ffffff;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .reject-chip:hover {
+      background: #fee2e2;
+      color: #dc2626;
+      border-color: #fca5a5;
+    }
 
     /* Modal Styles */
     .modal-overlay {
@@ -575,6 +618,75 @@
       </a>
     </nav>
 
+  </div>
+
+  <!-- =========================================================
+       REJECT REQUEST MODAL
+  ========================================================== -->
+  <div id="rejectModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 440px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+            <i class="fa-solid fa-ban"></i>
+          </div>
+          <div>
+            <div class="modal-title">ปฏิเสธคำขอแจ้งซ่อม (Reject Request)</div>
+            <div id="modalRejectReqCodeLabel" style="font-size: 11px; font-family: monospace; color: #dc2626; font-weight: 700;">-</div>
+          </div>
+        </div>
+        <button onclick="closeRejectModal()" style="background: none; border: none; width: 30px; height: 30px; border-radius: 50%; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-xmark" style="font-size: 14px;"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div style="background: #f8fafc; border-radius: var(--radius-md); padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-color); font-size: 12px;">
+          <div style="margin-bottom: 4px;"><strong style="color: var(--text-sub);">เครื่องจักร:</strong> <span id="rejectModalAsset">-</span></div>
+          <div style="margin-bottom: 4px;"><strong style="color: var(--text-sub);">อาการเสีย:</strong> <span id="rejectModalIssue">-</span></div>
+          <div><strong style="color: var(--text-sub);">ผู้แจ้ง:</strong> <span id="rejectModalReporter">-</span></div>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 11.5px; font-weight: 700; color: #991b1b; margin-bottom: 4px;">
+            เหตุผลการปฏิเสธคำขอ (Reject Reason) <span style="color: #ef4444;">*</span>:
+          </label>
+          <textarea
+            id="rejectModalReason"
+            rows="3"
+            placeholder="ระบุเหตุผลในการปฏิเสธ เช่น ข้อมูลไม่ชัดเจน, ไม่อยู่ในขอบข่ายงานซ่อมบำรุง, อุปกรณ์ใช้งานได้ตามปกติ..."
+            style="width: 100%; border: 1.5px solid #fca5a5; border-radius: var(--radius-md); padding: 8px 10px; font-size: 12px; font-family: inherit; resize: none; outline: none; background: #fffafb;"
+          ></textarea>
+        </div>
+
+        <!-- Quick reason chips -->
+        <div style="margin-bottom: 14px;">
+          <div style="font-size: 10.5px; color: #64748b; font-weight: 600; margin-bottom: 6px;">
+            <i class="fa-solid fa-hand-pointer" style="margin-right: 3px;"></i> หรือเลือกเหตุผลด่วน:
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+            <button type="button" class="reject-chip" onclick="selectRejectChip('ข้อมูลคำขอไม่ครบถ้วน / รายละเอียดไม่ชัดเจน')">ข้อมูลไม่ครบถ้วน</button>
+            <button type="button" class="reject-chip" onclick="selectRejectChip('แจ้งซ่อมซ้ำซ้อนกับใบงานเดิม')">แจ้งซ่อมซ้ำซ้อน</button>
+            <button type="button" class="reject-chip" onclick="selectRejectChip('ไม่อยู่ในเงื่อนไขการรับบริการของฝ่ายซ่อมบำรุง')">ไม่อยู่ในเงื่อนไข</button>
+            <button type="button" class="reject-chip" onclick="selectRejectChip('เครื่องจักร/อุปกรณ์ใช้งานได้ตามปกติ')">เครื่องใช้งานได้ปกติ</button>
+            <button type="button" class="reject-chip" onclick="selectRejectChip('ยกเลิกตามคำขอของผู้แจ้ง')">ผู้แจ้งขอยกเลิก</button>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; color: #b91c1c; background: #fef2f2; padding: 8px 10px; border-radius: var(--radius-sm); border: 1px solid #fecaca; line-height: 1.4;">
+          <i class="fa-solid fa-triangle-exclamation" style="margin-right: 3px;"></i> เมื่อยืนยัน สถานะคำขอจะเปลี่ยนเป็น <strong>Rejected</strong> และบันทึกเหตุผลในตาราง <strong>requests (reject_reason)</strong> ทันที
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" onclick="closeRejectModal()" style="padding: 8px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: #ffffff; color: var(--text-main); font-size: 12px; font-weight: 600; cursor: pointer;">
+          ยกเลิก
+        </button>
+        <button type="button" id="btnConfirmReject" onclick="submitModalReject()" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: var(--radius-md); font-size: 12px; font-weight: 700; font-family: inherit; color: #ffffff; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(220, 38, 38, 0.25); transition: all 0.2s ease;">
+          <i class="fa-solid fa-ban"></i> ยืนยันปฏิเสธคำขอ
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- =========================================================
@@ -1129,9 +1241,14 @@
               <span>
                 <i class="fa-solid fa-user-pen" style="margin-right: 3px;"></i> ผู้แจ้ง: <strong style="color: var(--text-main);">${reporter}</strong>
               </span>
-              <button type="button" onclick="openAssignModal('${reqCode}', '${item.request_type || 'CM'}')" class="btn-assign">
-                <i class="fa-solid fa-user-plus"></i> มอบหมายงาน
-              </button>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <button type="button" onclick="openRejectModal('${reqCode}')" class="btn-reject" title="ปฏิเสธคำขอแจ้งซ่อม">
+                  <i class="fa-solid fa-ban"></i> ปฏิเสธ
+                </button>
+                <button type="button" onclick="openAssignModal('${reqCode}', '${item.request_type || 'CM'}')" class="btn-assign">
+                  <i class="fa-solid fa-user-plus"></i> มอบหมายงาน
+                </button>
+              </div>
             </div>
 
           </div>`;
@@ -1338,6 +1455,85 @@
         btn.innerHTML = '<i class="fa-solid fa-check-double"></i> ยืนยันอนุมัติงาน';
         console.error('submitModalApproval Error:', err);
         alert('เกิดข้อผิดพลาดในการอนุมัติ: ' + (err.message || String(err)));
+      }
+    }
+
+    /**
+     * =========================================================
+     * REJECT REQUEST MODAL HANDLERS
+     * =========================================================
+     */
+    let activeRejectRequestCode = null;
+
+    function openRejectModal(requestCode) {
+      activeRejectRequestCode = requestCode;
+      document.getElementById('modalRejectReqCodeLabel').innerText = 'รหัสคำขอ: ' + requestCode;
+
+      const reqItem = rawPendingTasks.find(t => (t.request_code || t.requestCode) === requestCode);
+      const assetName = reqItem ? `${reqItem.machine_name || reqItem.asset_name || '-'} (${reqItem.asset_code || reqItem.assetCode || '-'})` : '-';
+      const issueDesc = reqItem ? (reqItem.issue_desc || reqItem.issue_description || '-') : '-';
+      const reporter = reqItem ? (reqItem.reporter_name || reqItem.reporter_by || '-') : '-';
+
+      document.getElementById('rejectModalAsset').innerText = assetName;
+      document.getElementById('rejectModalIssue').innerText = issueDesc;
+      document.getElementById('rejectModalReporter').innerText = reporter;
+      document.getElementById('rejectModalReason').value = '';
+
+      document.getElementById('rejectModal').style.display = 'flex';
+    }
+
+    function closeRejectModal() {
+      document.getElementById('rejectModal').style.display = 'none';
+      activeRejectRequestCode = null;
+    }
+
+    function selectRejectChip(text) {
+      const textarea = document.getElementById('rejectModalReason');
+      if (textarea) {
+        textarea.value = text;
+        textarea.focus();
+      }
+    }
+
+    async function submitModalReject() {
+      if (!activeRejectRequestCode) return;
+
+      const reason = (document.getElementById('rejectModalReason').value || '').trim();
+      if (!reason) {
+        alert('กรุณาระบุเหตุผลการปฏิเสธคำขอแจ้งซ่อม (Reject Reason)');
+        document.getElementById('rejectModalReason').focus();
+        return;
+      }
+
+      const updatedBy = (currentManager && (currentManager.displayName || currentManager.name || currentManager.userName)) || 'Manager';
+      const btn = document.getElementById('btnConfirmReject');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังบันทึก...';
+
+      try {
+        const payload = {
+          requestCode: activeRejectRequestCode,
+          reason: reason,
+          reject_reason: reason,
+          updatedBy: updatedBy
+        };
+
+        const res = await CmmsApi.rejectRequest(payload);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-ban"></i> ยืนยันปฏิเสธคำขอ';
+
+        if (res && (res.status === 'error' || res.success === false || res.error)) {
+          throw new Error(res.message || res.error || 'ไม่สามารถปฏิเสธคำขอได้');
+        }
+
+        alert(`ปฏิเสธคำขอแจ้งซ่อม ${activeRejectRequestCode} เรียบร้อยแล้ว!\nสถานะเปลี่ยนเป็น "Rejected"`);
+        closeRejectModal();
+        loadPendingTasks();
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-ban"></i> ยืนยันปฏิเสธคำขอ';
+        console.error('submitModalReject Error:', err);
+        alert('เกิดข้อผิดพลาดในการปฏิเสธคำขอ: ' + (err.message || String(err)));
       }
     }
 

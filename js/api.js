@@ -785,9 +785,25 @@ const CmmsApi = (function () {
     }
   }
 
+  /**
+   * 22. ปฏิเสธคำขอแจ้งซ่อม (Reject Request)
+   */
+  async function rejectRequest(payload) {
+    try {
+      return await request("rejectRequest", payload, "POST");
+    } catch (err) {
+      console.error("rejectRequest Error:", err);
+      return {
+        success: false,
+        message: err.message || String(err)
+      };
+    }
+  }
+
   // Public Interface
   return {
     checkManagerRole,
+    rejectRequest,
     getPendingRequests,
     getAssigneeMasterData,
     assignPendingTask,
