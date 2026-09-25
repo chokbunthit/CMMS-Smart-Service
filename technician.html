@@ -1636,6 +1636,31 @@
     }
 
     /**
+     * Check if a Work Order is Breakdown Maintenance (BM)
+     */
+    function isBMWorkOrder(wo, data) {
+      const targetWO = groupedWorkOrders.find(w => w.woNo === ((wo && (wo.woNo || wo.wo_code)) || currentActiveWO));
+      const typeStr = (
+        (wo && (wo.woType || wo.workorder_type || wo.wo_type || wo.request_type)) ||
+        (targetWO && (targetWO.woType || targetWO.workorder_type)) ||
+        ""
+      ).trim().toUpperCase();
+
+      const codeStr = ((wo && (wo.woNo || wo.wo_code)) || currentActiveWO || "").trim().toUpperCase();
+
+      if (typeStr.includes("BM") || typeStr.includes("BREAKDOWN") || codeStr.startsWith("BM")) {
+        return true;
+      }
+
+      const workTypeStr = ((wo && wo.workType) || (targetWO && targetWO.workType) || "").toUpperCase();
+      if (workTypeStr.includes("BM") || workTypeStr.includes("BREAKDOWN")) {
+        return true;
+      }
+
+      return false;
+    }
+
+    /**
      * อัปเดต Sticky Action Bar ด้านล่างของ Drawer ตามสถานะใบงาน
      */
     function updateStickyActionBar(wo) {
@@ -1949,9 +1974,7 @@
         const closing = data.closingForm || {};
         const req = data.request || {};
         const targetWO = groupedWorkOrders.find(w => w.woNo === (wo.woNo || wo.wo_code || currentActiveWO));
-        const isBM = (wo.woType || "").toUpperCase().includes("BM") ||
-                     (targetWO && (targetWO.woType || "").toUpperCase().includes("BM")) ||
-                     (currentActiveWO || "").toUpperCase().startsWith("BM");
+        const isBM = isBMWorkOrder(wo, data);
 
         const now = new Date();
         const defaultDate = closing.endDate ? closing.endDate.split("T")[0] : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -2092,7 +2115,7 @@
             <div class="form-group" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px; margin-bottom: 14px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <label class="form-label" style="margin-bottom: 0; color: #92400e; font-weight: 700;">
-                  <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; margin-right: 5px;"></i>รหัสเครื่องหยุดทำงาน (Downtime Code)
+                  <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; margin-right: 5px;"></i>รหัสเครื่องหยุดทำงาน (Downtime Code) ${isBM ? '<span class="required" style="color: #ef4444; font-weight: 700;">* (บังคับสำหรับ BM)</span>' : ''}
                 </label>
                 <span id="cmSelectedDowntimeBadge" style="font-size: 11px; font-weight: 700; color: #b45309; background: #fef3c7; border: 1px solid #fcd34d; padding: 2px 8px; border-radius: 6px; display: ${closing.downtimeCode ? 'inline-block' : 'none'};">
                   ${closing.downtimeCode || ''}
@@ -2651,6 +2674,29 @@
      * =========================================================
      */
     function openCloseModal() {
+      const wo = (currentDrawerData && currentDrawerData.wo) || {};
+      const isBM = isBMWorkOrder(wo, currentDrawerData);
+
+      // ตรวจสอบเงื่อนไขใบงาน Type BM: บังคับเลือก Downtime Code ก่อนบันทึก
+      if (isBM) {
+        const dtCode = document.getElementById("cmDowntimeCode")?.value?.trim();
+        if (!dtCode) {
+          alert("⚠️ กรุณาเลือกรหัสเครื่องหยุดทำงาน (Downtime Code) ก่อนทำการบันทึกปิดใบงาน BM");
+          const dtSelect = document.getElementById("cmDowntimeCode");
+          if (dtSelect) {
+            dtSelect.focus();
+            dtSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            dtSelect.style.border = "2px solid #ef4444";
+            dtSelect.style.boxShadow = "0 0 0 3px rgba(239, 68, 68, 0.25)";
+            setTimeout(() => {
+              dtSelect.style.border = "1px solid #cbd5e1";
+              dtSelect.style.boxShadow = "none";
+            }, 3500);
+          }
+          return;
+        }
+      }
+
       const modal = document.getElementById("closeWOModal");
       const woText = document.getElementById("modalWoNoText");
       if (woText) woText.textContent = currentActiveWO || "-";
@@ -2664,6 +2710,33 @@
 
     async function handleFinalCloseSubmit(e) {
       e.preventDefault();
+
+      const wo = (currentDrawerData && currentDrawerData.wo) || {};
+      const targetWO = groupedWorkOrders.find(w => w.woNo === currentActiveWO);
+      const isPM = isPMWorkOrder(wo, currentDrawerData);
+      const isBM = isBMWorkOrder(wo, currentDrawerData);
+
+      // ตรวจสอบกรณี BM ซ้ำอีกครั้งก่อนส่ง API
+      if (isBM) {
+        const dtCode = document.getElementById("cmDowntimeCode")?.value?.trim();
+        if (!dtCode) {
+          closeCloseModal();
+          alert("⚠️ กรุณาเลือกรหัสเครื่องหยุดทำงาน (Downtime Code) ก่อนทำการบันทึกปิดใบงาน BM");
+          const dtSelect = document.getElementById("cmDowntimeCode");
+          if (dtSelect) {
+            dtSelect.focus();
+            dtSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            dtSelect.style.border = "2px solid #ef4444";
+            dtSelect.style.boxShadow = "0 0 0 3px rgba(239, 68, 68, 0.25)";
+            setTimeout(() => {
+              dtSelect.style.border = "1px solid #cbd5e1";
+              dtSelect.style.boxShadow = "none";
+            }, 3500);
+          }
+          return;
+        }
+      }
+
       closeCloseModal();
 
       LiffAuth.showLoading("กำลังส่งตรวจงาน...", currentActiveWO);
