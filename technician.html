@@ -1120,13 +1120,20 @@
         }
 
         const woGroup = groupMap.get(woNo);
-        woGroup.subtasks.push({
-          id: task.id,
-          task_no: task.task_no || `TASK-${woGroup.subtasks.length + 1}`,
-          equipment: task.equipment || task.equipment_name || "อุปกรณ์ย่อย",
-          equipment_code: task.equipment_code || "",
-          pm_type: task.pm_type || ""
-        });
+        const isPM = (woGroup.woType || "").toUpperCase().includes("PM");
+        const hasValidTask = task.has_task === true || isPM || (task.task_no && String(task.task_no).trim() !== "");
+
+        if (hasValidTask && (task.equipment_code || task.equipment || task.task_no)) {
+          woGroup.subtasks.push({
+            id: task.id,
+            task_id: task.task_id || null,
+            task_no: task.task_no || `TASK-${woGroup.subtasks.length + 1}`,
+            task_category: task.task_category || "",
+            equipment: task.equipment || task.equipment_name || "อุปกรณ์ย่อย",
+            equipment_code: task.equipment_code || "",
+            pm_type: task.pm_type || ""
+          });
+        }
       });
 
       groupedWorkOrders = Array.from(groupMap.values());
@@ -1423,20 +1430,23 @@
         // Subtasks preview list
         let subtasksHtml = "";
         if (wo.subtasks && wo.subtasks.length > 0) {
+          const isBMCard = type === "BM";
           const previewList = wo.subtasks.slice(0, 2);
+          const boxTitle = isBMCard ? "จุดที่ต้องตรวจสอบ/ขั้นตอนมาตรฐาน" : "จุดตรวจเช็ค";
           subtasksHtml = `
             <div class="wo-subtasks-preview">
               <div style="font-weight: 600; margin-bottom: 4px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center;">
-                <span><i class="fa-solid fa-list-check" style="color: var(--primary); margin-right: 4px;"></i>จุดตรวจเช็ค (${wo.subtasks.length} รายการ):</span>
-                <span style="font-size: 10px; color: #64748b; font-weight: normal;">แตะจุดที่ต้องการเปิด</span>
+                <span><i class="fa-solid fa-list-check" style="color: ${isBMCard ? '#ef4444' : 'var(--primary)'}; margin-right: 4px;"></i>${boxTitle} (${wo.subtasks.length} รายการ):</span>
+                <span style="font-size: 10px; color: #64748b; font-weight: normal;">แตะเพื่อดูขั้นตอน</span>
               </div>
               ${previewList.map((st, sIdx) => {
             const targetIdent = st.equipment_code || st.equipment || st.task_no || "";
             return `
-                <div class="wo-subtask-item" onclick="openWorkOrderDetail('${wo.woNo}', '${encodeURIComponent(targetIdent)}')" title="แตะเพื่อเปิดกรอกข้อมูลจุดนี้โดยตรง">
-                  <i class="fa-regular fa-circle-dot" style="font-size: 8px; color: var(--primary);"></i>
+                <div class="wo-subtask-item" onclick="openWorkOrderDetail('${wo.woNo}', '${encodeURIComponent(targetIdent)}')" title="แตะเพื่อเปิดดูรายละเอียดจุดนี้">
+                  <i class="fa-regular fa-circle-dot" style="font-size: 8px; color: ${isBMCard ? '#ef4444' : 'var(--primary)'};"></i>
                   <span style="font-weight: 600; color: #1e293b;">${escapeHtml(st.equipment)}</span>
-                  ${st.equipment_code ? `<span style="font-size: 10px; color: #64748b;">(${escapeHtml(st.equipment_code)})</span>` : ""}
+                  ${st.task_no ? `<span class="badge" style="font-size: 9.5px; background: #e0f2fe; color: #0369a1; padding: 1px 5px; border-radius: 4px; font-weight: 700;">${escapeHtml(st.task_no)}</span>` : ""}
+                  ${st.task_category ? `<span style="font-size: 10px; color: #475569; font-weight: 500;">(${escapeHtml(st.task_category)})</span>` : ""}
                   <i class="fa-solid fa-arrow-right" style="font-size: 9px; color: #94a3b8; margin-left: auto;"></i>
                 </div>
               `;
@@ -1952,6 +1962,46 @@
           defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         }
 
+        const bmTask = data.bmStandardTask || (data.tasks && data.tasks[0] && data.tasks[0].steps && data.tasks[0].steps.length > 0 ? data.tasks[0] : null);
+        let bmTaskHtml = "";
+        if (isBM && bmTask) {
+          const stepList = bmTask.steps || [];
+          bmTaskHtml = `
+            <div class="bm-task-box" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 12.5px; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-clipboard-list" style="color: #15803d; font-size: 14px;"></i>
+                  ขั้นตอนมาตรฐาน (Standard Steps) - ลำดับแรก
+                </span>
+                <span class="badge" style="background: #dcfce7; color: #15803d; font-size: 10.5px; font-weight: 700; border: 1px solid #86efac; padding: 2px 8px; border-radius: 6px;">
+                  ${escapeHtml(bmTask.task_no || 'T001')} ${bmTask.task_category ? `| ${escapeHtml(bmTask.task_category)}` : ''}
+                </span>
+              </div>
+              <div style="font-size: 11.5px; color: #374151; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span style="font-weight: 600; color: #1f2937;"><i class="fa-solid fa-puzzle-piece" style="margin-right: 4px; color: #0284c7;"></i>ชิ้นส่วนที่เกี่ยวข้อง:</span>
+                <span style="background: #ffffff; padding: 2px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: 600; color: #0f172a;">
+                  ${escapeHtml(bmTask.component_name || bmTask.equipment_name || bmTask.component_code || '')}
+                </span>
+                ${bmTask.machine_group && bmTask.component_group ? `
+                  <span style="font-size: 10.5px; color: #64748b;">(กลุ่ม: ${escapeHtml(bmTask.machine_group)} / ${escapeHtml(bmTask.component_group)})</span>
+                ` : ''}
+              </div>
+              <div style="background: #ffffff; border: 1px solid #dcfce7; border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+                ${stepList.length > 0 ? stepList.map(s => `
+                  <div style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.45;">
+                    <span style="min-width: 20px; height: 20px; background: #22c55e; color: #ffffff; border-radius: 50%; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; flex-shrink: 0;">
+                      ${s.stepNo || s.step || 1}
+                    </span>
+                    <span style="color: #1e293b; font-weight: 500;">${escapeHtml(s.stepName || s.desc || '')}</span>
+                  </div>
+                `).join('') : `
+                  <div style="font-size: 11px; color: #64748b;">ไม่มีขั้นตอนย่อยที่บันทึกไว้ในระบบ</div>
+                `}
+              </div>
+            </div>
+          `;
+        }
+
         container.innerHTML = `
           <div class="card" style="margin-top: 14px;">
             <div class="card-header">
@@ -1961,6 +2011,8 @@
               </span>
               <span class="badge ${isBM ? 'tag-bm' : 'tag-cm'}" style="font-size: 10.5px;">${isBM ? 'BM Form' : 'CM Form'}</span>
             </div>
+
+            ${bmTaskHtml}
 
             <div class="form-group">
               <label class="form-label">สาเหตุของปัญหา / ความเสียหาย (Root Cause) <span class="required">*</span></label>
