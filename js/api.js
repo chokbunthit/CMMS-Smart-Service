@@ -646,6 +646,23 @@ const CmmsApi = (function () {
           { item: "สายพานขับ V-Belt B-42", cost: 190, qty: 1 }
         ],
         totalExpenses: 750,
+        bmStandardTask: {
+          id: 35,
+          task_no: "T001",
+          task_category: "ตรวจ-ปรับแต่ง",
+          pm_cycle: "1M",
+          machine_group: "BP",
+          component_group: "PT",
+          component_name: "Motor Drive Gearbox",
+          component_code: "EQ-CV-01",
+          steps: [
+            { stepNo: 1, stepName: "Loto: แขวนป้ายเห้ามเดินครื่องจักรที่เปรคเกอร์", desc: "Loto: แขวนป้ายเห้ามเดินครื่องจักรที่เปรคเกอร์" },
+            { stepNo: 2, stepName: "ตัดระบบไฟฟ้าและตรวจสอบความปลอดภัย", desc: "ตัดระบบไฟฟ้าและตรวจสอบความปลอดภัย" },
+            { stepNo: 3, stepName: "เช็คสภาพตัวเครื่องไม่แตกหัก ตรวจสอบจุดยึดและลูกปืน", desc: "เช็คสภาพตัวเครื่องไม่แตกหัก ตรวจสอบจุดยึดและลูกปืน" },
+            { stepNo: 4, stepName: "Loto: ปลดป้าย Loto หลังดำเนินการเสร็จสิ้น", desc: "Loto: ปลดป้าย Loto หลังดำเนินการเสร็จสิ้น" },
+            { stepNo: 5, stepName: "เปิดเครื่องทดสอบการหมุนและการทำงาน", desc: "เปิดเครื่องทดสอบการหมุนและการทำงาน" }
+          ]
+        },
         closingForm: {
           rootCause: "",
           actionTaken: "",
