@@ -1962,41 +1962,60 @@
           defaultTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         }
 
-        const bmTask = data.bmStandardTask || (data.tasks && data.tasks[0] && data.tasks[0].steps && data.tasks[0].steps.length > 0 ? data.tasks[0] : null);
+        const bmTasks = data.bmStandardTasks || (data.bmStandardTask ? [data.bmStandardTask] : []);
         let bmTaskHtml = "";
-        if (isBM && bmTask) {
-          const stepList = bmTask.steps || [];
+        if (isBM && bmTasks.length > 0) {
+          window.activeBMTasks = bmTasks;
+          const currentTask = bmTasks[0];
+          const stepList = currentTask.steps || [];
+
+          // ปุ่มเลือก Task แสดงแค่รหัส Task เช่น T001, T002
+          const taskButtonsHtml = bmTasks.map((t, idx) => `
+            <button type="button" 
+                    id="btnBMTask_${idx}" 
+                    class="bm-task-pill ${idx === 0 ? 'active' : ''}" 
+                    onclick="selectBMTask(${idx})" 
+                    style="padding: 4px 10px; font-size: 11px; font-weight: 700; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 1px solid ${idx === 0 ? '#15803d' : '#86efac'}; background: ${idx === 0 ? '#166534' : '#ffffff'}; color: ${idx === 0 ? '#ffffff' : '#15803d'};">
+              ${escapeHtml(t.task_no || `T${String(idx+1).padStart(3, '0')}`)}
+            </button>
+          `).join('');
+
           bmTaskHtml = `
             <div class="bm-task-box" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
                 <span style="font-size: 12.5px; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 6px;">
                   <i class="fa-solid fa-clipboard-list" style="color: #15803d; font-size: 14px;"></i>
-                  ขั้นตอนมาตรฐาน (Standard Steps) - ลำดับแรก
+                  ขั้นตอนมาตรฐาน (Standard Steps)
                 </span>
-                <span class="badge" style="background: #dcfce7; color: #15803d; font-size: 10.5px; font-weight: 700; border: 1px solid #86efac; padding: 2px 8px; border-radius: 6px;">
-                  ${escapeHtml(bmTask.task_no || 'T001')} ${bmTask.task_category ? `| ${escapeHtml(bmTask.task_category)}` : ''}
-                </span>
-              </div>
-              <div style="font-size: 11.5px; color: #374151; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                <span style="font-weight: 600; color: #1f2937;"><i class="fa-solid fa-puzzle-piece" style="margin-right: 4px; color: #0284c7;"></i>ชิ้นส่วนที่เกี่ยวข้อง:</span>
-                <span style="background: #ffffff; padding: 2px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: 600; color: #0f172a;">
-                  ${escapeHtml(bmTask.component_name || bmTask.equipment_name || bmTask.component_code || '')}
-                </span>
-                ${bmTask.machine_group && bmTask.component_group ? `
-                  <span style="font-size: 10.5px; color: #64748b;">(กลุ่ม: ${escapeHtml(bmTask.machine_group)} / ${escapeHtml(bmTask.component_group)})</span>
-                ` : ''}
-              </div>
-              <div style="background: #ffffff; border: 1px solid #dcfce7; border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
-                ${stepList.length > 0 ? stepList.map(s => `
-                  <div style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.45;">
-                    <span style="min-width: 20px; height: 20px; background: #22c55e; color: #ffffff; border-radius: 50%; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; flex-shrink: 0;">
-                      ${s.stepNo || s.step || 1}
-                    </span>
-                    <span style="color: #1e293b; font-weight: 500;">${escapeHtml(s.stepName || s.desc || '')}</span>
+                
+                <!-- ปุ่มเลือก Task รหัส T001, T002 -->
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 10.5px; color: #15803d; font-weight: 600;">เลือก Task:</span>
+                  <div id="bmTaskButtonsContainer" style="display: inline-flex; gap: 4px;">
+                    ${taskButtonsHtml}
                   </div>
-                `).join('') : `
-                  <div style="font-size: 11px; color: #64748b;">ไม่มีขั้นตอนย่อยที่บันทึกไว้ในระบบ</div>
-                `}
+                </div>
+              </div>
+
+              <!-- ข้อมูลชิ้นส่วนและหมวดหมู่ของ Task ปัจจุบัน -->
+              <div style="font-size: 11.5px; color: #374151; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <span style="font-weight: 600; color: #1f2937;"><i class="fa-solid fa-puzzle-piece" style="margin-right: 4px; color: #0284c7;"></i>ชิ้นส่วน:</span>
+                  <span style="background: #ffffff; padding: 2px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: 600; color: #0f172a;">
+                    ${escapeHtml(currentTask.component_name || currentTask.equipment_name || currentTask.component_code || '')}
+                  </span>
+                  ${currentTask.machine_group && currentTask.component_group ? `
+                    <span style="font-size: 10.5px; color: #64748b;">(กลุ่ม: ${escapeHtml(currentTask.machine_group)} / ${escapeHtml(currentTask.component_group)})</span>
+                  ` : ''}
+                </div>
+                <span id="bmActiveCategoryBadge" class="badge" style="background: #dcfce7; color: #15803d; font-size: 10.5px; font-weight: 700; border: 1px solid #86efac; padding: 2px 8px; border-radius: 6px;">
+                  ${escapeHtml(currentTask.task_category ? `หมวดหมู่: ${currentTask.task_category}` : 'ตรวจ-ปรับแต่ง')}
+                </span>
+              </div>
+
+              <!-- รายการขั้นตอน (เปลี่ยนตาม Task ที่เลือก) -->
+              <div id="bmTaskStepsContent" style="background: #ffffff; border: 1px solid #dcfce7; border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; transition: opacity 0.2s;">
+                ${renderBMStepsHtml(stepList)}
               </div>
             </div>
           `;
@@ -2470,6 +2489,58 @@
       const diffMs = new Date(ed) - new Date(sd);
       if (diffMs > 0) {
         wt.value = (diffMs / (1000 * 60 * 60)).toFixed(2);
+      }
+    }
+
+    /**
+     * เรนเดอร์รายการขั้นตอนย่อยของงาน BM
+     */
+    function renderBMStepsHtml(stepList) {
+      if (!stepList || stepList.length === 0) {
+        return `<div style="font-size: 11px; color: #64748b; padding: 4px 0;">ไม่มีขั้นตอนย่อยที่บันทึกไว้ในระบบ</div>`;
+      }
+      return stepList.map(s => `
+        <div style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.45;">
+          <span style="min-width: 20px; height: 20px; background: #22c55e; color: #ffffff; border-radius: 50%; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; flex-shrink: 0;">
+            ${s.stepNo || s.step || 1}
+          </span>
+          <span style="color: #1e293b; font-weight: 500;">${escapeHtml(s.stepName || s.desc || '')}</span>
+        </div>
+      `).join('');
+    }
+
+    /**
+     * เปลี่ยน Task งาน BM เมื่อช่างกดปุ่ม T001, T002 ฯลฯ
+     */
+    function selectBMTask(idx) {
+      if (!window.activeBMTasks || !window.activeBMTasks[idx]) return;
+      const targetTask = window.activeBMTasks[idx];
+
+      // ปรับสถานะปุ่มที่เลือก (Active / Inactive)
+      window.activeBMTasks.forEach((_, i) => {
+        const btn = document.getElementById(`btnBMTask_${i}`);
+        if (btn) {
+          const isActive = (i === idx);
+          btn.style.background = isActive ? '#166534' : '#ffffff';
+          btn.style.color = isActive ? '#ffffff' : '#15803d';
+          btn.style.borderColor = isActive ? '#15803d' : '#86efac';
+        }
+      });
+
+      // ปรับข้อความหมวดหมู่ของ Task
+      const catBadge = document.getElementById("bmActiveCategoryBadge");
+      if (catBadge) {
+        catBadge.textContent = targetTask.task_category ? `หมวดหมู่: ${targetTask.task_category}` : 'ตรวจ-ปรับแต่ง';
+      }
+
+      // เปลี่ยนเนื้อหาขั้นตอน Step 1-10 พร้อม Transition นุ่มนวล
+      const stepsContainer = document.getElementById("bmTaskStepsContent");
+      if (stepsContainer) {
+        stepsContainer.style.opacity = '0.4';
+        setTimeout(() => {
+          stepsContainer.innerHTML = renderBMStepsHtml(targetTask.steps || []);
+          stepsContainer.style.opacity = '1';
+        }, 120);
       }
     }
 
